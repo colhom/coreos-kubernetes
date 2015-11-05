@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"gopkg.in/yaml.v2"
+	"os"
 )
 
 var (
@@ -23,6 +24,10 @@ type Config struct {
 	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize"`
 	WorkerCount              int    `yaml:"workerCount"`
 	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
+    EtcdRcloneConfig struct{
+        Destination string  `yaml:"destination"`
+        Conf string              `yaml:"conf"`
+    }  `yaml:"etcdRcloneConfig"`
 }
 
 func (cfg *Config) Valid() error {
@@ -41,6 +46,12 @@ func (cfg *Config) Valid() error {
 	if _, err := url.Parse(cfg.ArtifactURL); err != nil {
 		return fmt.Errorf("invalid artifactURL: %v", err)
 	}
+
+    if  cfg.EtcdRcloneConfig.Destination == "" || cfg.EtcdRcloneConfig.Conf == "" {
+        fmt.Fprintf(os.Stderr,
+            "WARNING: etcdRcloneConfig is not configured for this cluster.\n -> etcd will not be externally backed up!\n")
+    }
+
 	return nil
 }
 

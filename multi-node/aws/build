@@ -14,8 +14,11 @@ if [ -n "$(git diff --shortstat 2> /dev/null | tail -n1)" ]; then
     VERSION="${VERSION}+dirty"
 fi
 
+GOPATH=$(pwd) godep restore
 
+ln -sf $(pwd)/cmd/ $(pwd)/src/github.com/coreos/coreos-kubernetes/multi-node/aws/cmd
+ln -sf $(pwd)/pkg $(pwd)/src/github.com/coreos/coreos-kubernetes/multi-node/aws/pkg
 
 echo "Building kube-aws ${VERSION}..."
-GOPATH=${GOPATH}:${PWD}/Godeps/_workspace CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
+GOPATH=$(pwd) CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
 echo "done"
