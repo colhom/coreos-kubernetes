@@ -1,0 +1,34 @@
+[Unit]
+Description=rclone powered etcd2 backup service
+After=etcd2.service
+
+
+[Service]
+Type=oneshot
+Environment=RCLONE_ENDPOINT=s3-chom-testing-backups:chom-testing-backups/mytest
+Environment=RCLONE_CONFIG_PATH=/etc/rclone.conf
+Environment=ETCD_DATA_DIR=/var/lib/etcd2
+Environment=ETCD_BACKUP_DIR=/var/lib/etcd2-backup
+Environment=RCLONE_CHECKSUM=true
+
+ExecStartPre=/usr/bin/mkdir -p /var/lib/etcd2-backup
+ExecStartPre=/usr/bin/rm -rf /var/lib/etcd2-backup/member
+ExecStartPre=/usr/bin/etcdctl backup --data-dir=${ETCD_DATA_DIR} --backup-dir=${ETCD_BACKUP_DIR}
+
+# Copy the last backup, in case the new upload gets corrupted
+ExecStartPre=-/usr/bin/docker run --rm \
+-v ${RCLONE_CONFIG_PATH}:/etc/rclone.conf \
+quay.io/colhom/rclone:latest \
+  --config /etc/rclone.conf --checksum=${RCLONE_CHECKSUM} \
+  copy ${RCLONE_ENDPOINT}/member ${RCLONE_ENDPOINT}/last_member
+
+# Upload new backup
+ExecStart=/usr/bin/docker run --rm \
+-v ${ETCD_BACKUP_DIR}:/var/lib/etcd2-backup \
+-v ${RCLONE_CONFIG_PATH}:/etc/rclone.conf \
+quay.io/colhom/rclone:latest\
+  --config ${RCLONE_CONFIG_PATH} --checksum=${RCLONE_CHECKSUM} \
+  copy /var/lib/etcd2-backup/member ${RCLONE_ENDPOINT}/member
+
+[Install]
+WantedBy=multi-user.target
