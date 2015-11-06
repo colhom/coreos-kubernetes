@@ -1,0 +1,67 @@
+#!/bin/bash -e
+
+if [ -z $1 ];then
+    echo "usage: $0 <backup-dir>"
+    exit 1
+fi
+
+BACKUP_DIR="$1"
+
+if [ ! -d "$BACKUP_DIR" ];then
+    echo "$BACKUP_DIR is not a directory!"
+    exit 1
+fi
+PID=$$
+echo PID $PID
+function killEtcd {
+    set +e
+    ETCD_PID=$(pidof -o $PID etcd2)
+    if [ ! $ETCD_PID == "" ];then
+	echo "Found etcd $ETCD_PID"
+	kill $ETCD_PID
+    fi
+    set -e
+}
+
+killEtcd
+LOG_FILE=/var/log/etcd2-restore-first-$RANDOM.log
+/usr/bin/etcd2 --data-dir=${BACKUP_DIR} --force-new-cluster &> "$LOG_FILE" &
+
+
+function probe {
+    set +e
+    /usr/bin/etcdctl cluster-health &>> "$LOG_FILE"
+    local status=$?
+    set -e
+
+    if [ $status -ne 0 ];then
+	printf "bad"
+    else
+	printf "good"
+    fi
+}
+
+RETRY_CNT=0
+MAX_RETRY=5
+while [ $RETRY_CNT -lt $MAX_RETRY ];do
+    status=$(probe)
+    if [[ "$status" == "bad" ]];then
+	echo "etcdctl probe failed: attempt $RETRY_CNT / $MAX_RETRY"
+	RETRY_CNT=$(( $RETRY_CNT + 1 ))
+	sleep 3
+    else
+	echo "successful probe"
+	break
+    fi
+done
+
+killEtcd
+
+if [ $RETRY_CNT -lt $MAX_RETRY ];then
+    echo "backup restored successfully."
+    exit 0
+else
+    echo "backup is could not be restored."
+    echo "log file: $LOG_FILE"
+    exit 1
+fi

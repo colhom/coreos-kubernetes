@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+tar cf - etcd2-restore-first *.{service,timer} | vagrant ssh -c "tar xf -" e1
+
+vagrant ssh -c "sudo chmod 755 ./etcd2-restore-first && \
+	sudo mv *.{service,timer} /etc/systemd/system/ && \
+	sudo systemctl daemon-reload" e1
