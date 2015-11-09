@@ -1,7 +1,12 @@
 #!/bin/bash -e
 
-tar cf - etcd2-restore-first *.{service,timer} | vagrant ssh -c "tar xf -" e1
+tar cf - etcd2-restore-first *.{service,timer} etcd2-spam rclone.conf | vagrant ssh -c "tar xf -" e1
 
-vagrant ssh -c "sudo chmod 755 ./etcd2-restore-first && \
+vagrant ssh -c "
+sudo systemctl stop etcd2-backup.{timer,service} && \
+sudo cp ./rclone.conf /etc/ && \
+sudo chmod 755 ./etcd2-restore-first && \
 	sudo mv *.{service,timer} /etc/systemd/system/ && \
-	sudo systemctl daemon-reload" e1
+	sudo systemctl daemon-reload && \
+sudo systemctl start etcd2-backup.{timer,service}
+" e1

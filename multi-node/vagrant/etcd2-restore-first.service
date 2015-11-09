@@ -1,6 +1,6 @@
 [Unit]
 Description=Restore first etcd2 node from rclone endpoint
-Conflicts=etcd2.service etcd2-backup.service
+Conflicts=etcd2.service etcd2-backup.service etcd2-backup.timer
 
 [Service]
 Type=oneshot

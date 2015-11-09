@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while true;do
+    etcdctl set "/$RANDOM" "$RANDOM$RANDOM$RANDOM"
+    sleep .5
+done
