@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+if [ -z $1 ];then
+    echo "USAGE: $0 <eX>"
+    exit 1
+fi
+
+etcdNode=$1
+
+echo "devclear: $etcdNode"
+
+vagrant ssh -c "sudo rm -rf /var/lib/etcd2/member" "$etcdNode"

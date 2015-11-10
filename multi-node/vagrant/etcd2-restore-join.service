@@ -1,31 +1,11 @@
 [Unit]
-Description=Restore first etcd2 node from rclone endpoint
+Description=Restore  etcd2 node by joining new cluster
 Conflicts=etcd2.service etcd2-backup.service etcd2-backup.timer
 
 [Service]
 Type=oneshot
-Environment=RCLONE_ENDPOINT=s3-chom-testing-backups:chom-testing-backups/mytest
-Environment=RCLONE_CONFIG_PATH=/etc/rclone.conf
-Environment=ETCD_DATA_DIR=/var/lib/etcd2
-Environment=ETCD_BACKUP_DIR=/var/lib/etcd2-backup
-Environment=RCLONE_CHECKSUM=true
-
-ExecStartPre=/usr/bin/rm -rf ${ETCD_DATA_DIR}/member
-ExecStartPre=/usr/bin/mkdir -p ${ETCD_BACKUP_DIR}
-ExecStartPre=/usr/bin/rm -rf ${ETCD_BACKUP_DIR}/member
-
-# Copy the last backup from rclone endpoint
-ExecStartPre=/usr/bin/docker run --rm \
--v ${RCLONE_CONFIG_PATH}:/etc/rclone.conf \
-quay.io/colhom/rclone:latest \
-   --config /etc/rclone.conf --checksum=${RCLONE_CHECKSUM} \
-   copy ${RCLONE_ENDPOINT}/member ${ETCD_BACKUP_DIR}/
-
-# Validate backups via force-new-cluster
-ExecStartPre=/home/core/etcd2-restore-first ${ETCD_BACKUP_DIR}
-
-ExecStartPre=/usr/bin/cp -r ${ETCD_BACKUP_DIR}/member ${ETCD_DATA_DIR}/member
-ExecStart=/usr/bin/chown -R etcd:etcd ${ETCD_DATA_DIR}/member
+EnvironmentFile=/etc/etcd2-backup-restore.env
+ExecStart=/usr/bin/rm -rf ${ETCD_DATA_DIR}/member
 
 [Install]
 WantedBy=multi-user.target

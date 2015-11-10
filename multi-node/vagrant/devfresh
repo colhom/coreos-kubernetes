@@ -1,12 +1,28 @@
 #!/bin/bash -e
 
-tar cf - etcd2-restore-first *.{service,timer} etcd2-spam rclone.conf | vagrant ssh -c "tar xf -" e1
+if [ -z $1 ];then
+    echo "USAGE: $0 <eX>"
+    exit 1
+fi
+
+etcdNode=$1
+
+echo "devfresh: $etcdNode"
+
+tar cf - \
+    etcd2-restore-first \
+    *.{service,timer} \
+    etcd2-spam \
+    rclone.conf \
+    etcd2-backup-restore.env \
+    | vagrant ssh -c "tar xf -" "$etcdNode"
 
 vagrant ssh -c "
-sudo systemctl stop etcd2-backup.{timer,service} && \
+sudo systemctl stop etcd2-backup.{timer,service}; \
 sudo cp ./rclone.conf /etc/ && \
+sudo cp ./*.env /etc/ && \
 sudo chmod 755 ./etcd2-restore-first && \
 	sudo mv *.{service,timer} /etc/systemd/system/ && \
 	sudo systemctl daemon-reload && \
-sudo systemctl start etcd2-backup.{timer,service}
-" e1
+sudo systemctl start etcd2 etcd2-backup.{timer,service};
+" "$etcdNode"
