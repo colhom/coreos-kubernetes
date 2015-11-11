@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
 while true;do
-    etcdctl set "/$RANDOM" "$RANDOM$RANDOM$RANDOM"
+    dir="$RANDOM"
+    set +e
+    etcdctl mkdir "$RANDOM"
+    set -e
+    etcdctl set "/$dir/$RANDOM" "$RANDOM$RANDOM$RANDOM$RANDOM"
     sleep .5
 done

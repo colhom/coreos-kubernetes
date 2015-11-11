@@ -1,11 +1,22 @@
 [Unit]
-Description=Restore  etcd2 node by joining new cluster
-Conflicts=etcd2.service etcd2-backup.service etcd2-backup.timer
+Description=Restore etcd2 node by joining new cluster
+Conflicts=etcd2.service etcd2-backup.service
+Before=etcd2.service etcd2-backup.service
 
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/etcd2-backup-restore.env
-ExecStart=/usr/bin/rm -rf ${ETCD_DATA_DIR}/member
+
+ExecStartPre=/usr/bin/rm -rf ${ETCD_DATA_DIR}/member
+ExecStartPre=/usr/bin/mkdir -p ${ETCD_BACKUP_DIR}
+ExecStartPre=/usr/bin/rm -rf ${ETCD_BACKUP_DIR}/member
+ExecStartPre=/usr/bin/ls -R ${ETCD_BACKUP_DIR}
+
+# Validate backups via force-new-cluster
+ExecStartPre=/home/core/etcd2-restore-first ${ETCD_BACKUP_DIR}
+
+ExecStartPre=/usr/bin/cp -r ${ETCD_BACKUP_DIR}/member ${ETCD_DATA_DIR}/member
+ExecStart=/usr/bin/chown -R etcd:etcd ${ETCD_DATA_DIR}/member
 
 [Install]
 WantedBy=multi-user.target

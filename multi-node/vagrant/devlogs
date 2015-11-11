@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+
+if [ $# -lt 1 ];then
+    echo "USAGE: $0 <etcd_node>"
+    exit 1
+fi
+
+vagrant ssh -c "journalctl -f -u etcd2.service -u etcd2-backup.service -u etcd2-spam.service" "$1"

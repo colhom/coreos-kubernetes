@@ -20,7 +20,7 @@ for i in $@;do
     fi
     mcnt=$(( mcnt + 1 ))
 done
-sleep 10
+
 for i in $@;do
         echo "STARTING ${i}"
     	vagrant ssh -c "sudo systemctl start etcd2.service etcd2-backup.timer" "$i"

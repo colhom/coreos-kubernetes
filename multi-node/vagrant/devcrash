@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+if [ $# -lt 1 ];then
+    echo "USAGE: $0 [etc_nodes...]"
+    exit 1
+fi
+
+for etcdNode in $@;do
+    vagrant ssh -c "sudo rm -rf /var/lib/etcd2/member/{snap,wal}" "$etcdNode"
+done

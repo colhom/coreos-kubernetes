@@ -1,6 +1,7 @@
 [Unit]
-Description=Restore first etcd2 node from rclone endpoint
-Conflicts=etcd2.service etcd2-backup.service etcd2-backup.timer
+Description=Restore single-node etcd2 node from rclone endpoint
+Conflicts=etcd2.service etcd2-backup.service
+Before=etcd2.service etcd2-backup.service
 
 [Service]
 Type=oneshot
@@ -13,9 +14,12 @@ ExecStartPre=/usr/bin/rm -rf ${ETCD_BACKUP_DIR}/member
 # Copy the last backup from rclone endpoint
 ExecStartPre=/usr/bin/docker run --rm \
 -v ${RCLONE_CONFIG_PATH}:/etc/rclone.conf \
+-v ${ETCD_BACKUP_DIR}:/etcd2backup \
 quay.io/colhom/rclone:latest \
    --config /etc/rclone.conf --checksum=${RCLONE_CHECKSUM} \
-   copy ${RCLONE_ENDPOINT}/%m/member ${ETCD_BACKUP_DIR}/
+   copy ${RCLONE_ENDPOINT}/%m /etcd2backup
+
+ExecStartPre=/usr/bin/ls -R ${ETCD_BACKUP_DIR}
 
 # Validate backups via force-new-cluster
 ExecStartPre=/home/core/etcd2-restore-first ${ETCD_BACKUP_DIR}

@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+if [ $# -lt 1 ];then
+    echo "USAGE: $0 [etcd_nodes...]"
+    exit 1
+fi
+
+for etcdNode in $@;do
+    vagrant ssh -c "cat - > ~/etcd2-spam.service" $etcdNode < ./etcd2-spam.service
+    vagrant ssh -c "cat - > ~/etcd2-spam" $etcdNode < ./etcd2-spam
+    vagrant ssh -c "
+sudo mv ./etcd2-spam.service /etc/systemd/system/ && \
+sudo systemctl daemon-reload && \
+sudo systemctl start etcd2-spam.service
+" $etcdNode
+
+done
