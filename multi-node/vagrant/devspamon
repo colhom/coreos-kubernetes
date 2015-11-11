@@ -9,7 +9,10 @@ for etcdNode in $@;do
     vagrant ssh -c "cat - > ~/etcd2-spam.service" $etcdNode < ./etcd2-spam.service
     vagrant ssh -c "cat - > ~/etcd2-spam" $etcdNode < ./etcd2-spam
     vagrant ssh -c "
+sudo mkdir -p /opt/bin && \
 sudo mv ./etcd2-spam.service /etc/systemd/system/ && \
+sudo mv ./etcd2-spam /opt/bin && \
+sudo chmod +x /opt/bin/etcd2-spam && \
 sudo systemctl daemon-reload && \
 sudo systemctl start etcd2-spam.service
 " $etcdNode

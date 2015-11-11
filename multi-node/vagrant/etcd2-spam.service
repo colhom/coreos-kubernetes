@@ -2,7 +2,7 @@
 After=etcd2.service
 
 [Service]
-ExecStart=/home/core/etcd2-spam
+ExecStart=/opt/bin/etcd2-spam
 
 [Install]
 WantedBy=multi-user.target

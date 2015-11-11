@@ -13,7 +13,7 @@ ExecStartPre=/usr/bin/rm -rf ${ETCD_BACKUP_DIR}/member
 ExecStartPre=/usr/bin/ls -R ${ETCD_BACKUP_DIR}
 
 # Validate backups via force-new-cluster
-ExecStartPre=/home/core/etcd2-restore-first ${ETCD_BACKUP_DIR}
+ExecStartPre=/opt/bin/etcd2-restore-first ${ETCD_BACKUP_DIR}
 
 ExecStartPre=/usr/bin/cp -r ${ETCD_BACKUP_DIR}/member ${ETCD_DATA_DIR}/member
 ExecStart=/usr/bin/chown -R etcd:etcd ${ETCD_DATA_DIR}/member

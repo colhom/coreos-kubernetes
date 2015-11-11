@@ -10,11 +10,11 @@ for etcdNode in $@;do
     echo "devfresh: $etcdNode"
 
     tar cf - \
-	etcd2-restore-first \
-	*.{service,timer} \
-	etcd2-spam \
+	./../generic/etcd2-backup/etcd2-restore-first \
+	./../generic/etcd2-backup/*.{service,timer} \
+	etcd2-spam{,.service} \
 	rclone.conf \
-	etcd2-backup-restore.env \
+	./../generic/etcd2-backup/etcd2-backup-restore.env \
 	| vagrant ssh -c "tar xf -" "$etcdNode"
 
     vagrant ssh -c "
@@ -22,7 +22,9 @@ sudo systemctl stop etcd2-backup.{timer,service}; \
 sudo cp ./rclone.conf /etc/ && \
 sudo cp ./*.env /etc/ && \
 sudo chmod 755 ./etcd2-restore-first && \
-	sudo mv *.{service,timer} /etc/systemd/system/ && \
+sudo mkdir -p /opt/bin && \
+	sudo mv generic/etcd2-backup/*.{service,timer} /etc/systemd/system && \
+	sudo mv generic/etcd2-backup/etcd2-restore-first /opt/bin && \
 	sudo systemctl daemon-reload && \
 sudo systemctl start etcd2 etcd2-backup.{timer,service};
 " "$etcdNode"
