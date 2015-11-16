@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+if [ $# -lt 1 ];then
+    echo "USAGE: $0 [etcd_nodes...]"
+    exit 1
+fi
+
+for etcdNode in $@;do
+    echo "devstart: $etcdNode"
+
+    vagrant ssh -c "sudo systemctl start etcd2-backup.timer etcd2.service;" "$etcdNode"
+done

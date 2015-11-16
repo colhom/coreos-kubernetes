@@ -15,7 +15,6 @@ for etcdNode in $@;do
 	./../generic/etcd2-backup/etcd2-join \
 	etcd2-spam{,.service} \
 	rclone.conf \
-	./../generic/etcd2-backup/etcd2-backup-restore.env \
 	| vagrant ssh -c "tar xf -" "$etcdNode"
 
     vagrant ssh -c "
@@ -26,14 +25,15 @@ sudo mkdir -p /var/run/systemd/system/etcd2-restore.service.d && \
 sudo mkdir -p /var/run/systemd/system/etcd2-join.service.d && \
 sudo mkdir -p /opt/bin && \
 	sudo mv ./etcd2-restore /opt/bin && \
-	sudo mv ./generic/etcd2-backup /etcd2-join /opt/bin && \
+	sudo mv ./generic/etcd2-backup/etcd2-join /opt/bin && \
 	sudo mv generic/etcd2-backup/*.{service,timer} /etc/systemd/system && \
 	sudo systemctl daemon-reload && \
 	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-restore.service.d/ && \
 	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-backup.service.d/ && \
 	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-join.service.d/ && \
-        sudo ln -sf /var/run/systemd/system/etcd2{,-restore}.service.d/20-cloudinit.conf
-        sudo ln -sf /var/run/systemd/system/etcd2{,-backup}.service.d/20-cloudinit.conf
+        sudo ln -sf /var/run/systemd/system/etcd2{,-restore}.service.d/20-cloudinit.conf && \
+        sudo ln -sf /var/run/systemd/system/etcd2{,-backup}.service.d/20-cloudinit.conf && \
+        sudo ln -sf /var/run/systemd/system/etcd2{,-join}.service.d/20-cloudinit.conf && \
 	sudo systemctl daemon-reload \
 " "$etcdNode"
 done

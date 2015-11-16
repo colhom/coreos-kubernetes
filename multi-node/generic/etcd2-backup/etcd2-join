@@ -1,0 +1,35 @@
+#!/bin/bash -e
+
+if [ $# -lt 3 ];then
+    echo "USAGE: $0  <master_advertise_peer_urls> <target_name> <target_peer_url>"
+    exit 1
+fi
+
+function convertDropin {
+    sed 's/^Added.*$/[Service]/g'| sed 's/="/=/g' | sed 's/^ETCD_/Environment="ETCD_/g'
+}
+masterAdvUrl=$1
+targetName=$2
+targetUrl=$3
+
+cmd="etcdctl --peers ${masterAdvUrl} member add ${targetName} ${targetUrl}"
+
+set +e
+ENV_VARS=`$cmd`
+
+if [ ! $? -eq 0 ];then
+   echo "failed adding member"
+   echo $ENV_VARS
+   exit 1
+fi
+
+set -e
+
+echo "${ENV_VARS}" | convertDropin  > 40-boostrap-cluster.conf
+
+sudo mv 40-boostrap-cluster.conf /var/run/systemd/system/etcd2.service.d/
+sudo systemctl daemon-reload
+sudo systemctl cat etcd2.service
+echo "You can now start etcd2"
+
+
