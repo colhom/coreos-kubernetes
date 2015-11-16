@@ -5,35 +5,35 @@ if [ $# -lt 1 ];then
     exit 1
 fi
 
-GOPATH=$(pwd) go build  -o ./etcd2-restore ./../generic/etcd2-backup/etcd2-restore.go
+GOPATH=$(pwd) go build  -o ./../generic/etcd2-backup/etcd2-restore ./../generic/etcd2-backup/etcd2-restore.go
 for etcdNode in $@;do
 
     echo "devfresh: $etcdNode"
     tar cf - \
-	./etcd2-restore \
 	./../generic/etcd2-backup/*.{service,timer,conf} \
-	./../generic/etcd2-backup/etcd2-join \
-	etcd2-spam{,.service} \
+	./../generic/etcd2-backup/etcd2-{restore,join} \
 	rclone.conf \
 	| vagrant ssh -c "tar xf -" "$etcdNode"
 
     vagrant ssh -c "
-sudo systemctl stop etcd2-backup.{timer,service}; \
-sudo cp ./rclone.conf /etc/ && \
-sudo mkdir -p /var/run/systemd/system/etcd2-backup.service.d && \
-sudo mkdir -p /var/run/systemd/system/etcd2-restore.service.d && \
-sudo mkdir -p /var/run/systemd/system/etcd2-join.service.d && \
-sudo mkdir -p /opt/bin && \
-	sudo mv ./etcd2-restore /opt/bin && \
-	sudo mv ./generic/etcd2-backup/etcd2-join /opt/bin && \
-	sudo mv generic/etcd2-backup/*.{service,timer} /etc/systemd/system && \
-	sudo systemctl daemon-reload && \
-	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-restore.service.d/ && \
-	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-backup.service.d/ && \
-	sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-join.service.d/ && \
-        sudo ln -sf /var/run/systemd/system/etcd2{,-restore}.service.d/20-cloudinit.conf && \
-        sudo ln -sf /var/run/systemd/system/etcd2{,-backup}.service.d/20-cloudinit.conf && \
-        sudo ln -sf /var/run/systemd/system/etcd2{,-join}.service.d/20-cloudinit.conf && \
-	sudo systemctl daemon-reload \
+sudo systemctl stop etcd2-backup.{timer,service}
+set -e
+
+sudo cp ./rclone.conf /etc/
+
+sudo mkdir -p /opt/bin
+
+sudo mv ./generic/etcd2-backup/etcd2-{restore,join} /opt/bin
+sudo mv ./generic/etcd2-backup/*.{service,timer} /etc/systemd/system
+
+sudo systemctl daemon-reload
+
+for jobtype in restore backup join;do
+     sudo mkdir -p /var/run/systemd/system/etcd2-${jobtype}.service.d
+     sudo cp generic/etcd2-backup/30-etcd2-backup-restore.conf /var/run/systemd/system/etcd2-${jobtype}.service.d/
+     sudo ln -sf /var/run/systemd/system/etcd2{,-${jobtype}}.service.d/20-cloudinit.conf
+done
+
+sudo systemctl daemon-reload
 " "$etcdNode"
 done
