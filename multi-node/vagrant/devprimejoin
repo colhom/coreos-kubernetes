@@ -1,0 +1,36 @@
+#!/bin/bash -e
+
+if [ $# -lt 4 ];then
+    echo "USAGE: $0 <master_etcd_node> <master_advertise_peer_urls> <target_etcd_node> <target_peer_url>"
+    exit 1
+fi
+
+function convertDropin {
+    sed 's/^Added.*$/[Service]/g'| sed 's/="/=/g' | sed 's/^ETCD_/Environment="ETCD_/g' | sed '/^\s*$/d'
+}
+masterNode=$1
+masterAdvUrl=$2
+targetNode=$3
+targetUrl=$4
+
+cmd="etcdctl --peers ${masterAdvUrl} member add ${targetNode} ${targetUrl}"
+echo $cmd
+set +e
+ENV_VARS=`vagrant ssh -c "$cmd" $targetNode`
+
+if [ ! $? -eq 0 ];then
+   echo "failed adding member"
+   echo $ENV_VARS
+   exit 1
+fi
+
+set -e
+
+echo "${ENV_VARS}" | convertDropin | vagrant ssh -c "cat - > 40-boostrap-cluster.conf" $targetNode
+#vagrant ssh -c "sudo mkdir -p /var/run/systemd/system/etcd2-join.service.d/" $targetNode
+vagrant ssh -c "sudo mv 40-boostrap-cluster.conf /var/run/systemd/system/etcd2.service.d/" $targetNode
+vagrant ssh -c "sudo systemctl daemon-reload" $targetNode
+vagrant ssh -c "sudo systemctl cat etcd2.service" $targetNode
+vagrant ssh -c "sudo rm -rf /var/lib/etcd2/member && sudo chown -R etcd:etcd /var/lib/etcd2/" $targetNode
+
+

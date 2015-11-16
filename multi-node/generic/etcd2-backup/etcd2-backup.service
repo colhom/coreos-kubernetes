@@ -4,9 +4,11 @@ After=etcd2.service
 
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/etcd2-backup-restore.env
+
 ExecStartPre=/usr/bin/rm -rf ${ETCD_BACKUP_DIR}
-ExecStartPre=/usr/bin/mkdir -p ${ETCD_BACKUP_DIR}
+ExecStartPre=/usr/bin/mkdir -p ${ETCD_BACKUP_DIR}/member/snap
+ExecStartPre=/usr/bin/echo ETCD_DATA_DIR: ${ETCD_DATA_DIR}
+ExecStartPre=/usr/bin/echo ETCD_BACKUP_DIR: ${ETCD_BACKUP_DIR}
 ExecStartPre=/usr/bin/etcdctl backup --data-dir=${ETCD_DATA_DIR} --backup-dir=${ETCD_BACKUP_DIR}
 ExecStartPre=/usr/bin/touch ${ETCD_BACKUP_DIR}/member/snap/iamhere.txt
 

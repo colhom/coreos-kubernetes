@@ -6,4 +6,4 @@ if [ $# -lt 1 ];then
     exit 1
 fi
 
-vagrant ssh -c "journalctl -f -u etcd2.service -u etcd2-backup.service -u etcd2-spam.service" "$1"
+vagrant ssh -c "journalctl -f -u etcd2-restore.service -u etcd2.service -u etcd2-backup.service -u etcd2-spam.service" "$1"
