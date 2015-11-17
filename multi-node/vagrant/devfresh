@@ -15,7 +15,7 @@ for etcdNode in $@;do
 	rclone.conf \
 	| vagrant ssh -c "tar xf -" "$etcdNode"
 
-    vagrant ssh -c "
+    vagrant ssh -c '
 sudo systemctl stop etcd2-backup.{timer,service}
 set -e
 
@@ -35,5 +35,5 @@ for jobtype in restore backup join;do
 done
 
 sudo systemctl daemon-reload
-" "$etcdNode"
+' "$etcdNode"
 done
