@@ -63,17 +63,11 @@ func (cfg *Config) Valid() error {
 		return fmt.Errorf("invalid artifactURL: %v", err)
 	}
 
-	if cfg.VPCCIDR == "" {
-		cfg.VPCCIDR = DefaultVPCCIDR
-	}
 	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	if cfg.InstanceCIDR == "" {
-		cfg.InstanceCIDR = DefaultInstanceCIDR
-	}
 	instancesNetIP, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid instanceCIDR: %v", err)
@@ -85,9 +79,6 @@ func (cfg *Config) Valid() error {
 		)
 	}
 
-	if cfg.ControllerIP == "" {
-		cfg.ControllerIP = DefaultControllerIP
-	}
 	controllerIPAddr := net.ParseIP(cfg.ControllerIP)
 	if controllerIPAddr == nil {
 		return fmt.Errorf("invalid controllerIP: %s", cfg.ControllerIP)
@@ -99,9 +90,6 @@ func (cfg *Config) Valid() error {
 		)
 	}
 
-	if cfg.PodCIDR == "" {
-		cfg.PodCIDR = DefaultPodCIDR
-	}
 	podNetIP, podNet, err := net.ParseCIDR(cfg.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
@@ -110,9 +98,6 @@ func (cfg *Config) Valid() error {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
 	}
 
-	if cfg.ServiceCIDR == "" {
-		cfg.ServiceCIDR = DefaultServiceCIDR
-	}
 	serviceNetIP, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
@@ -124,9 +109,6 @@ func (cfg *Config) Valid() error {
 		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
 	}
 
-	if cfg.KubernetesServiceIP == "" {
-		cfg.KubernetesServiceIP = DefaultKubernetesServiceIP
-	}
 	kubernetesServiceIPAddr := net.ParseIP(cfg.KubernetesServiceIP)
 	if kubernetesServiceIPAddr == nil {
 		return fmt.Errorf("Invalid kubernetesServiceIP: %s", cfg.KubernetesServiceIP)
@@ -135,9 +117,6 @@ func (cfg *Config) Valid() error {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, cfg.KubernetesServiceIP)
 	}
 
-	if cfg.DNSServiceIP == "" {
-		cfg.DNSServiceIP = DefaultDNSServiceIP
-	}
 	dnsServiceIPAddr := net.ParseIP(cfg.DNSServiceIP)
 	if dnsServiceIPAddr == nil {
 		return fmt.Errorf("Invalid dnsServiceIP: %s", cfg.DNSServiceIP)
@@ -168,8 +147,15 @@ func DecodeConfigFromFile(out *Config, loc string) error {
 
 func NewDefaultConfig(ver string) *Config {
 	return &Config{
-		ClusterName: "kubernetes",
-		ArtifactURL: DefaultArtifactURL(ver),
+		ClusterName:         "kubernetes",
+		ArtifactURL:         DefaultArtifactURL(ver),
+		VPCCIDR:             DefaultVPCCIDR,
+		InstanceCIDR:        DefaultInstanceCIDR,
+		ControllerIP:        DefaultControllerIP,
+		PodCIDR:             DefaultPodCIDR,
+		ServiceCIDR:         DefaultServiceCIDR,
+		KubernetesServiceIP: DefaultKubernetesServiceIP,
+		DNSServiceIP:        DefaultDNSServiceIP,
 	}
 }
 
