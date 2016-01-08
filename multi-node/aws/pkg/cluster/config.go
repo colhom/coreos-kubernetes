@@ -134,11 +134,15 @@ func DecodeConfigFromFile(out *Config, loc string) error {
 		return fmt.Errorf("failed reading config file: %v", err)
 	}
 
-	if err = yaml.Unmarshal(d, &out); err != nil {
+	return decodeConfigBytes(out, d)
+}
+
+func decodeConfigBytes(out *Config, d []byte) error {
+	if err := yaml.Unmarshal(d, &out); err != nil {
 		return fmt.Errorf("failed decoding config file: %v", err)
 	}
 
-	if err = out.Valid(); err != nil {
+	if err := out.Valid(); err != nil {
 		return fmt.Errorf("config file invalid: %v", err)
 	}
 
