@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/tlsutil"
+	"github.com/spf13/cobra"
 )
 
 var (

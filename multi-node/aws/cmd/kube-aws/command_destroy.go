@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
+	"github.com/spf13/cobra"
 )
 
 var (

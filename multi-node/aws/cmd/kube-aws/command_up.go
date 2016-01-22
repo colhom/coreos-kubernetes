@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -52,24 +50,4 @@ func runCmdUp(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf(info.String())
-}
-
-func getCloudFormation(url string) (string, error) {
-	r, err := http.Get(url)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to get template: %v", err)
-	}
-
-	if r.StatusCode != 200 {
-		return "", fmt.Errorf("Failed to get template: invalid status code: %d", r.StatusCode)
-	}
-
-	tmpl, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return "", fmt.Errorf("Failed to get template: %v", err)
-	}
-	r.Body.Close()
-
-	return string(tmpl), nil
 }

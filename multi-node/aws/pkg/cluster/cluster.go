@@ -2,17 +2,16 @@ package cluster
 
 import (
 	"bytes"
-
 	"fmt"
+	"io/ioutil"
+	"path"
+	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/blobutil"
-	"io/ioutil"
-	"path"
-	"path/filepath"
 )
 
 type ClusterInfo struct {
