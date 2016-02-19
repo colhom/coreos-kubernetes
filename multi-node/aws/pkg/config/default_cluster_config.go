@@ -42,8 +42,17 @@ availabilityZone: {{.AvailabilityZone}}
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
 
-# CIDR for Kubernetes VPC
+# CIDR for Kubernetes VPC (must match existingVPC's cidr, if provided)
 # vpcCIDR: "10.0.0.0/16"
+
+# Fill this out if you are deploying the cluster to an existing VPC
+#existingVPC:
+  #The id of the target existing vpc
+  #vpcID: vpc-xxxx
+
+  #The route table in the existing VPC
+  #which the new kubernetes subnet should associate with
+  #routeTableID: rtb-xxxx
 
 # CIDR for Kubernetes subnet
 # instanceCIDR: "10.0.0.0/24"

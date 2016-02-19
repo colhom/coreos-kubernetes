@@ -41,7 +41,10 @@ func NewDefaultConfig() *Config {
 		StackTemplate: &blobutil.NamedBuffer{Name: "stack-template.json"},
 	}
 }
-
+type ExistingVPC struct {
+    VPCID string `yaml:"vpcID"`
+    RouteTableID string `yaml:"routeTableID"`
+}
 type Config struct {
 	ClusterName              string `yaml:"clusterName"`
 	ExternalDNSName          string `yaml:"externalDNSName"`
@@ -56,6 +59,7 @@ type Config struct {
 	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
 	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
 	VPCCIDR                  string `yaml:"vpcCIDR"`
+    ExistingVPC        *ExistingVPC `yaml:"existingVPC"`
 	InstanceCIDR             string `yaml:"instanceCIDR"`
 	ControllerIP             string `yaml:"controllerIP"`
 	PodCIDR                  string `yaml:"podCIDR"`

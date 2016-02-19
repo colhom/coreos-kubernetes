@@ -1,10 +1,23 @@
 package config
 
 var defaultStackTemplate = `
-
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "kube-aws Kubernetes cluster {{.ClusterName}}",
+  "Parameters" : {
+    {{with .ExistingVPC}}
+      "VPC" : {
+        "Type" : "String",
+        "Default" : "{{.VPCID}}",
+        "Description" : "ID of kubernetes VPC"
+      },
+      "RouteTable": {
+        "Type" : "String",
+        "Default" : "{{.RouteTableID}}",
+	    "Description" : "Route Table to attach to"
+      }
+    {{end}}
+  },
   "Resources": {
     "AlarmControllerRecover": {
       "Properties": {
@@ -253,17 +266,6 @@ var defaultStackTemplate = `
       },
       "Type": "AWS::EC2::Instance"
     },
-    "InternetGateway": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
-          }
-        ]
-      },
-      "Type": "AWS::EC2::InternetGateway"
-    },
     "LaunchConfigurationWorker": {
       "Properties": {
         "BlockDeviceMappings": [
@@ -291,32 +293,6 @@ var defaultStackTemplate = `
         "UserData": "{{.UserData.Worker.String}}"
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
-    },
-    "RouteTable": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
-          }
-        ],
-        "VpcId": {
-          "Ref": "VPC"
-        }
-      },
-      "Type": "AWS::EC2::RouteTable"
-    },
-    "RouteToInternet": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": {
-          "Ref": "InternetGateway"
-        },
-        "RouteTableId": {
-          "Ref": "RouteTable"
-        }
-      },
-      "Type": "AWS::EC2::Route"
     },
     "SecurityGroupController": {
       "Properties": {
@@ -525,7 +501,7 @@ var defaultStackTemplate = `
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    },
+    }{{if not .ExistingVPC }},
     "VPC": {
       "Properties": {
         "CidrBlock": "{{.VPCCIDR}}",
@@ -555,7 +531,45 @@ var defaultStackTemplate = `
         }
       },
       "Type": "AWS::EC2::VPCGatewayAttachment"
+    },
+    "InternetGateway": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ]
+      },
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "RouteToInternet": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        },
+        "RouteTableId": {
+          "Ref": "RouteTable"
+        }
+      },
+      "Type": "AWS::EC2::Route"
+    },
+    "RouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      },
+      "Type": "AWS::EC2::RouteTable"
     }
+    {{end}}
   }
 }
 `
