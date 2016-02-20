@@ -219,17 +219,34 @@ var defaultStackTemplate = `
       },
       "Type": "AWS::IAM::Role"
     },
+    "ControllerEBSVolume": {
+      "Type":"AWS::EC2::Volume",
+      "Properties" : {
+	"AvailabilityZone" : "{{.AvailabilityZone}}",
+	"Size" : "8",
+	"Tags" : [
+	  {
+	    "Key" : "Name",
+	    "Value" :"{{.ClusterName}}-controller-etcd"
+	  },
+	  {
+	    "Key" : "KubernetesCluster",
+	    "Value" :"{{.ClusterName}}"
+	  }
+	]
+      }
+    },
+    "ControllerEBSAttachment" : {
+	"Type" : "AWS::EC2::VolumeAttachment",
+	"Properties" : {
+	  "InstanceId" : { "Ref" : "InstanceController" },
+	  "VolumeId"  : { "Ref" : "ControllerEBSVolume" },
+	  "Device" : "/dev/xvdf"
+	}
+    },
     "InstanceController": {
       "Properties": {
         "AvailabilityZone": "{{.AvailabilityZone}}",
-        "BlockDeviceMappings": [
-          {
-            "DeviceName": "/dev/xvda",
-            "Ebs": {
-              "VolumeSize": "{{.ControllerRootVolumeSize}}"
-            }
-          }
-        ],
         "IamInstanceProfile": {
           "Ref": "IAMInstanceProfileController"
         },
