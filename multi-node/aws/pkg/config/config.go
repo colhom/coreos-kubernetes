@@ -30,10 +30,9 @@ func NewDefaultConfig() *Config {
 		DNSServiceIP:             "10.3.0.10",
 		K8sVer:                   "v1.1.4",
 		ControllerInstanceType:   "m3.medium",
-		ControllerRootVolumeSize: 30,
+        ControllerEtcdVolumeSize: 30,
 		WorkerCount:              1,
 		WorkerInstanceType:       "m3.medium",
-		WorkerRootVolumeSize:     30,
 
 		TLSConfig:     newTLSConfig(),
 		UserData:      newUserDataConfig(),
@@ -53,10 +52,9 @@ type Config struct {
 	AvailabilityZone         string `yaml:"availabilityZone"`
 	ReleaseChannel           string `yaml:"releaseChannel"`
 	ControllerInstanceType   string `yaml:"controllerInstanceType"`
-	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize"`
+    ControllerEtcdVolumeSize int `yaml:"controllerEtcdVolumeSize"`
 	WorkerCount              int    `yaml:"workerCount"`
 	WorkerInstanceType       string `yaml:"workerInstanceType"`
-	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
 	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
 	VPCCIDR                  string `yaml:"vpcCIDR"`
     ExistingVPC        *ExistingVPC `yaml:"existingVPC"`

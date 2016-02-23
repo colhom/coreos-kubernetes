@@ -223,7 +223,7 @@ var defaultStackTemplate = `
       "Type":"AWS::EC2::Volume",
       "Properties" : {
 	"AvailabilityZone" : "{{.AvailabilityZone}}",
-	"Size" : "8",
+	"Size" : "{{.ControllerEtcdVolumeSize}}",
 	"Tags" : [
 	  {
 	    "Key" : "Name",
@@ -285,14 +285,6 @@ var defaultStackTemplate = `
     },
     "LaunchConfigurationWorker": {
       "Properties": {
-        "BlockDeviceMappings": [
-          {
-            "DeviceName": "/dev/xvda",
-            "Ebs": {
-              "VolumeSize": "{{.WorkerRootVolumeSize}}"
-            }
-          }
-        ],
         "IamInstanceProfile": {
           "Ref": "IAMInstanceProfileWorker"
         },

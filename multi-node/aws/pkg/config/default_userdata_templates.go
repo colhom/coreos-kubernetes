@@ -133,6 +133,11 @@ coreos:
   units:
     - name: etcd2.service
       command: start
+      drop-ins:
+        - name: 80-data-dir-permissions.conf
+          content: |
+            Environment=ETCD_DATA_DIR=/var/lib/etcd2
+            ExecStartPre=chown -R etcd:etcd /var/lib/etcd2
 
     - name: docker.service
       drop-ins:
@@ -155,6 +160,8 @@ coreos:
       enable: true
       content: |
         [Service]
+        StartLimitInterval=0
+        Restart=on-failure
         ExecStart=/usr/bin/kubelet \
         --api_servers=http://localhost:8080 \
         --register-node=false \
@@ -182,7 +189,50 @@ coreos:
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-kube-system
 
+    - name: var-lib-etcd2.mount
+      enable: true
+      content: |
+        [Unit]
+        Description=etcd2 data directory ebs volume mount
+        Requires=dev-xvdf.device
+        After=dev-xvdf.device
+        Before=etcd2.service
+
+        [Mount]
+        What=/dev/xvdf
+        Where=/var/lib/etcd2
+        Type=ext4
+
+        [Install]
+        RequiredBy=etcd2.service
+
+    - name: format-etcd2-volume.service
+      enable: true
+      content: |
+        [Unit]
+        Description=etcd2 ebs volume formatting
+        Before=var-lib-etcd2.mount
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/format-etcd2-volume
+
+        [Install]
+        RequiredBy=var-lib-etcd2.mount
+
 write_files:
+  - path: /opt/bin/format-etcd2-volume
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      if [[ "$(wipefs -n -p /dev/xvdf | grep ext4)" == "" ]];then
+        mkfs.ext4 /dev/xvdf
+      else
+        echo "etcd volume is already formatted"
+      fi
+
   - path: /opt/bin/install-kube-system
     permissions: 0700
     owner: root:root

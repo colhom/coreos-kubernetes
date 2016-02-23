@@ -27,17 +27,11 @@ availabilityZone: {{.AvailabilityZone}}
 # Instance type for controller node
 #controllerInstanceType: m3.medium
 
-# Disk size (GiB) for controller node
-#controllerRootVolumeSize: 30
+# Disk size (GiB) for controller nodes' ebs-backed etcd volume
+#controllerEtcdVolumeSize: 30
 
 # Number of worker nodes to create
 #workerCount: 1
-
-# Instance type for worker nodes
-#workerInstanceType: m3.medium
-
-# Disk size (GiB) for worker nodes
-#workerRootVolumeSize: 30
 
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
