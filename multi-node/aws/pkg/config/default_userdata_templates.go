@@ -37,6 +37,7 @@ coreos:
         --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
         --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
         --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
+        StartLimitInterval=0
         Restart=always
         RestartSec=10
         [Install]
@@ -136,8 +137,8 @@ coreos:
       drop-ins:
         - name: 80-data-dir-permissions.conf
           content: |
+            [Service]
             Environment=ETCD_DATA_DIR=/var/lib/etcd2
-            ExecStartPre=chown -R etcd:etcd /var/lib/etcd2
 
     - name: docker.service
       drop-ins:
@@ -217,6 +218,7 @@ coreos:
         Type=oneshot
         RemainAfterExit=yes
         ExecStart=/opt/bin/format-etcd2-volume
+        ExecStartPost=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
 
         [Install]
         RequiredBy=var-lib-etcd2.mount

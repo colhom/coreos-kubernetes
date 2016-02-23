@@ -65,8 +65,8 @@ var defaultStackTemplate = `
         "LaunchConfigurationName": {
           "Ref": "LaunchConfigurationWorker"
         },
-        "MaxSize": "{{.WorkerCount}}",
-        "MinSize": "{{.WorkerCount}}",
+        "MaxSize": "{{.MaxWorkersASG}}",
+        "MinSize": "{{.MinWorkersASG}}",
         "Tags": [
           {
             "Key": "KubernetesCluster",
@@ -88,12 +88,7 @@ var defaultStackTemplate = `
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "UpdatePolicy" : {
 	    "AutoScalingRollingUpdate" : {
-          "MinInstancesInService" :
-          {{if .WorkerSpotPrice}}
-            "0"
-          {{else}}
-            "{{.WorkerCount}}"
-          {{end}},
+          "MinInstancesInService" : "{{.MinWorkersASG}}",
           "MaxBatchSize" : "1",
           "PauseTime" : "PT2M"
 	    }

@@ -24,6 +24,9 @@ region: {{.Region}}
 # Availability Zone to provision Kubernetes cluster
 availabilityZone: {{.AvailabilityZone}}
 
+# Kubernetes version to deploy
+kubernetesVersion: v.1.1.4
+
 # Instance type for controller node
 #controllerInstanceType: m3.medium
 

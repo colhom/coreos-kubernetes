@@ -72,6 +72,10 @@ type Config struct {
 	ETCDEndpoints     string `yaml:"-"`
 	APIServerEndpoint string `yaml:"-"`
 	AMI               string `yaml:"-"`
+    //TODO: we should work these in as config options
+    MinWorkersASG        int `yaml:"-"`
+    MaxWorkersASG        int `yaml:"-"`
+
 	//Subconfig
 	TLSConfig     *TLSConfig            `yaml:"-"`
 	UserData      *UserDataConfig       `yaml:"-"`
@@ -294,6 +298,14 @@ func newConfigFromBytes(d []byte) (*Config, error) {
 	out.APIServers = fmt.Sprintf("http://%s:8080", out.ControllerIP)
 	out.SecureAPIServers = fmt.Sprintf("https://%s:443", out.ControllerIP)
 	out.APIServerEndpoint = fmt.Sprintf("https://%s", out.ExternalDNSName)
+
+    if out.WorkerSpotPrice == "" {
+        out.MinWorkersASG = 0
+    }else{
+        out.MinWorkersASG = out.WorkerCount
+    }
+
+    out.MaxWorkersASG = out.WorkerCount+1
 
 	var err error
 	if out.AMI, err = getAMI(out.Region, out.ReleaseChannel); err != nil {
