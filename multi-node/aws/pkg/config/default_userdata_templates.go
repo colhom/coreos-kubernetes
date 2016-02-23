@@ -26,7 +26,8 @@ coreos:
 
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-        ExecStart=/usr/bin/kubelet \
+        Environment=KUBELET_VERSION={{.K8sVer}}
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api_servers={{.SecureAPIServers}} \
         --register-node=true \
         --allow-privileged=true \
@@ -67,7 +68,7 @@ write_files:
           hostNetwork: true
           containers:
           - name: kube-proxy
-            image: gcr.io/google_containers/hyperkube:{{.K8sVer}}
+            image: quay.io/coreos/hyperkube:{{.K8sVer}}
             command:
             - /hyperkube
             - proxy
@@ -264,7 +265,7 @@ write_files:
           hostNetwork: true
           containers:
           - name: kube-proxy
-            image: gcr.io/google_containers/hyperkube:{{.K8sVer}}
+            image: quay.io/coreos/hyperkube:{{.K8sVer}}
             command:
             - /hyperkube
             - proxy
@@ -292,7 +293,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-apiserver
-          image: gcr.io/google_containers/hyperkube:{{.K8sVer}}
+          image: quay.io/coreos/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - apiserver
@@ -390,7 +391,7 @@ write_files:
       spec:
         containers:
         - name: kube-controller-manager
-          image: gcr.io/google_containers/hyperkube:{{.K8sVer}}
+          image: quay.io/coreos/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - controller-manager
@@ -432,7 +433,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-scheduler
-          image: gcr.io/google_containers/hyperkube:{{.K8sVer}}
+          image: quay.io/coreos/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - scheduler
