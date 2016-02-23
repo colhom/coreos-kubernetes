@@ -26,6 +26,8 @@ coreos:
 
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        Environment="RKT_OPTS=--insecure-options=image"
+        Environment=KUBELET_ACI=quay.io/colin_hom/hyperkube
         Environment=KUBELET_VERSION={{.K8sVer}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api_servers={{.SecureAPIServers}} \
@@ -68,11 +70,11 @@ write_files:
           hostNetwork: true
           containers:
           - name: kube-proxy
-            image: quay.io/coreos/hyperkube:{{.K8sVer}}
+            image: quay.io/colin_hom/hyperkube:{{.K8sVer}}
             command:
             - /hyperkube
             - proxy
-            - --master={{.ControllerIP}}
+            - --master=https://{{.ControllerIP}}:443
             - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
             - --proxy-mode=iptables
             securityContext:
@@ -164,7 +166,9 @@ coreos:
       content: |
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        Environment="RKT_OPTS=--insecure-options=image"
         Environment=KUBELET_VERSION={{.K8sVer}}
+        Environment=KUBELET_ACI=quay.io/colin_hom/hyperkube
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api_servers=http://localhost:8080 \
         --register-node=false \
@@ -242,6 +246,7 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
+      /usr/bin/curl -XDELETE "http://127.0.0.1:8080/api/v1/namespaces/kube-system"
       /usr/bin/curl -XPOST -d @"/srv/kubernetes/manifests/kube-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
 
       for manifest in {kube-dns,heapster,influxdb}-rc.json;do
@@ -266,7 +271,7 @@ write_files:
           hostNetwork: true
           containers:
           - name: kube-proxy
-            image: quay.io/coreos/hyperkube:{{.K8sVer}}
+            image: quay.io/colin_hom/hyperkube:{{.K8sVer}}
             command:
             - /hyperkube
             - proxy
@@ -294,7 +299,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-apiserver
-          image: quay.io/coreos/hyperkube:{{.K8sVer}}
+          image: quay.io/colin_hom/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - apiserver
@@ -392,7 +397,7 @@ write_files:
       spec:
         containers:
         - name: kube-controller-manager
-          image: quay.io/coreos/hyperkube:{{.K8sVer}}
+          image: quay.io/colin_hom/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - controller-manager
@@ -434,7 +439,7 @@ write_files:
         hostNetwork: true
         containers:
         - name: kube-scheduler
-          image: quay.io/coreos/hyperkube:{{.K8sVer}}
+          image: quay.io/colin_hom/hyperkube:{{.K8sVer}}
           command:
           - /hyperkube
           - scheduler
