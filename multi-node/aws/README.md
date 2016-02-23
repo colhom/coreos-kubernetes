@@ -28,7 +28,11 @@ The compiled binary will be available at `./bin/kube-aws`.
 ```sh
 $ mkdir my-cluster
 $ cd ./my-cluster
-$ kube-aws init --cluster-name=my-cluster-name --external-dns-name=my-cluster-endpoint --region=us-west-1 --key-name=key-pair-name
+$ kube-aws init --cluster-name=my-cluster-name \
+--external-dns-name=my-cluster-endpoint.com \
+--region=us-west-1 \
+--availability-zone=us-west-1c \
+--key-name=key-pair-name
 ```
 
 There will now be a ./cluster.yaml file in the asset directory.
@@ -38,7 +42,7 @@ There will now be a ./cluster.yaml file in the asset directory.
 ```sh
 $ kube-aws render
 ```
-You now have a default-configured cluster that is ready to launch.
+You now have a default-configured cluster that is ready to launch. You do not need to re-render as asset files are changed.
 
 You can now customize your cluster by editing files:
 * ./cluster.yaml (common case)
