@@ -140,7 +140,8 @@ coreos:
           content: |
             [Service]
             Environment=ETCD_DATA_DIR=/var/lib/etcd2
-
+            PermissionsStartOnly=true
+            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
     - name: docker.service
       drop-ins:
         - name: 40-flannel.conf
@@ -162,9 +163,9 @@ coreos:
       enable: true
       content: |
         [Service]
-        StartLimitInterval=0
-        Restart=on-failure
-        ExecStart=/usr/bin/kubelet \
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        Environment=KUBELET_VERSION={{.K8sVer}}
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api_servers=http://localhost:8080 \
         --register-node=false \
         --allow-privileged=true \
@@ -173,6 +174,7 @@ coreos:
         --cluster_domain=cluster.local
         Restart=always
         RestartSec=10
+        StartLimitInterval=0
 
         [Install]
         WantedBy=multi-user.target
@@ -196,8 +198,6 @@ coreos:
       content: |
         [Unit]
         Description=etcd2 data directory ebs volume mount
-        Requires=dev-xvdf.device
-        After=dev-xvdf.device
         Before=etcd2.service
 
         [Mount]
@@ -214,12 +214,13 @@ coreos:
         [Unit]
         Description=etcd2 ebs volume formatting
         Before=var-lib-etcd2.mount
+        After=dev-xvdf.device
+        Requires=dev-xvdf.device
 
         [Service]
         Type=oneshot
         RemainAfterExit=yes
         ExecStart=/opt/bin/format-etcd2-volume
-        ExecStartPost=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
 
         [Install]
         RequiredBy=var-lib-etcd2.mount
