@@ -28,7 +28,7 @@ availabilityZone: {{.AvailabilityZone}}
 releaseChannel: alpha
 
 # AWS coreos AMI to use (omit to use release channel)
-ami: ami-xxxx
+# ami: ami-xxxx
 
 # Kubernetes version to deploy
 kubernetesVersion: v.1.1.4
