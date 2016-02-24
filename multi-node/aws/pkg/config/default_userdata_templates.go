@@ -246,7 +246,7 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
-      /usr/bin/curl -XDELETE "http://127.0.0.1:8080/api/v1/namespaces/kube-system"
+      ## TODO: Remove kube-system namespace and wait till it's actually terminated. Need this to support updates to kube-system
       /usr/bin/curl -XPOST -d @"/srv/kubernetes/manifests/kube-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
 
       for manifest in {kube-dns,heapster,influxdb}-rc.json;do

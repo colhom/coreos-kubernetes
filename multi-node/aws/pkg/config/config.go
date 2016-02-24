@@ -65,13 +65,13 @@ type Config struct {
 	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"`
 	DNSServiceIP             string `yaml:"dnsServiceIP"`
 	K8sVer                   string `yaml:"kubernetesVersion"`
-
+	AMI               string `yaml:"ami"`
 	//Calculated fields
 	APIServers        string `yaml:"-"`
 	SecureAPIServers  string `yaml:"-"`
 	ETCDEndpoints     string `yaml:"-"`
 	APIServerEndpoint string `yaml:"-"`
-	AMI               string `yaml:"-"`
+
     //TODO: we should work these in as config options
     MinWorkersASG        int `yaml:"-"`
     MaxWorkersASG        int `yaml:"-"`
@@ -307,10 +307,12 @@ func newConfigFromBytes(d []byte) (*Config, error) {
 
     out.MaxWorkersASG = out.WorkerCount+1
 
-	var err error
-	if out.AMI, err = getAMI(out.Region, out.ReleaseChannel); err != nil {
-		return nil, fmt.Errorf("Error getting region map: %v", err)
-	}
+    if out.AMI == "" {
+        var err error
+        if out.AMI, err = getAMI(out.Region, out.ReleaseChannel); err != nil {
+            return nil, fmt.Errorf("Error getting region map: %v", err)
+        }
+    }
 
 	return out, nil
 }
