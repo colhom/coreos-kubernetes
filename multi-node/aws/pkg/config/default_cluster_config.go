@@ -31,10 +31,13 @@ releaseChannel: alpha
 # ami: ami-xxxx
 
 # Kubernetes version to deploy
-kubernetesVersion: v.1.1.4
+kubernetesVersion: v1.1.7-coreos.1-ethtool
 
 # Instance type for controller node
-#controllerInstanceType: m3.medium
+# controllerInstanceType: m3.medium
+
+# Instance type for worker nodes
+# workerInstanceType: m3.medium
 
 # Disk size (GiB) for controller nodes' ebs-backed etcd volume
 #controllerEtcdVolumeSize: 30
