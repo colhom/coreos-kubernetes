@@ -219,6 +219,9 @@ var defaultStackTemplate = `
       "Properties" : {
 	"AvailabilityZone" : "{{.AvailabilityZone}}",
 	"Size" : "{{.ControllerEtcdVolumeSize}}",
+    {{if .ControllerEtcdSnapshotID}}
+      "SnapshotId" : "{{.ControllerEtcdSnapshotID}}",
+    {{end}}
 	"Tags" : [
 	  {
 	    "Key" : "Name",
@@ -292,7 +295,7 @@ var defaultStackTemplate = `
           }
         ],
         {{if .WorkerSpotPrice}}
-        "SpotPrice": {{.WorkerSpotPrice}},
+        "SpotPrice": "{{.WorkerSpotPrice}}",
         {{end}}
         "UserData": "{{.UserData.Worker.String}}"
       },

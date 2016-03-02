@@ -30,7 +30,7 @@ func NewDefaultConfig() *Config {
 		DNSServiceIP:             "10.3.0.10",
 		K8sVer:                   "v1.1.7-coreos.1",
 		ControllerInstanceType:   "m3.medium",
-        ControllerEtcdVolumeSize: 30,
+		ControllerEtcdVolumeSize: 30,
 		WorkerCount:              1,
 		WorkerInstanceType:       "m3.medium",
 
@@ -40,41 +40,43 @@ func NewDefaultConfig() *Config {
 		StackTemplate: &blobutil.NamedBuffer{Name: "stack-template.json"},
 	}
 }
+
 type ExistingVPC struct {
-    VPCID string `yaml:"vpcID"`
-    RouteTableID string `yaml:"routeTableID"`
+	VPCID        string `yaml:"vpcID"`
+	RouteTableID string `yaml:"routeTableID"`
 }
 type Config struct {
-	ClusterName              string `yaml:"clusterName"`
-	ExternalDNSName          string `yaml:"externalDNSName"`
-	KeyName                  string `yaml:"keyName"`
-	Region                   string `yaml:"region"`
-	AvailabilityZone         string `yaml:"availabilityZone"`
-	ReleaseChannel           string `yaml:"releaseChannel"`
-	ControllerInstanceType   string `yaml:"controllerInstanceType"`
-    ControllerEtcdVolumeSize int `yaml:"controllerEtcdVolumeSize"`
-	WorkerCount              int    `yaml:"workerCount"`
-	WorkerInstanceType       string `yaml:"workerInstanceType"`
-	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
-	VPCCIDR                  string `yaml:"vpcCIDR"`
-    ExistingVPC        *ExistingVPC `yaml:"existingVPC"`
-	InstanceCIDR             string `yaml:"instanceCIDR"`
-	ControllerIP             string `yaml:"controllerIP"`
-	PodCIDR                  string `yaml:"podCIDR"`
-	ServiceCIDR              string `yaml:"serviceCIDR"`
-	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"`
-	DNSServiceIP             string `yaml:"dnsServiceIP"`
-	K8sVer                   string `yaml:"kubernetesVersion"`
-	AMI               string `yaml:"ami"`
+	ClusterName              string       `yaml:"clusterName"`
+	ExternalDNSName          string       `yaml:"externalDNSName"`
+	KeyName                  string       `yaml:"keyName"`
+	Region                   string       `yaml:"region"`
+	AvailabilityZone         string       `yaml:"availabilityZone"`
+	ReleaseChannel           string       `yaml:"releaseChannel"`
+	ControllerInstanceType   string       `yaml:"controllerInstanceType"`
+	ControllerEtcdVolumeSize int          `yaml:"controllerEtcdVolumeSize"`
+	ControllerEtcdSnapshotID string       `yaml:"controllerEtcdSnapshotId"`
+	WorkerCount              int          `yaml:"workerCount"`
+	WorkerInstanceType       string       `yaml:"workerInstanceType"`
+	WorkerSpotPrice          string       `yaml:"workerSpotPrice"`
+	VPCCIDR                  string       `yaml:"vpcCIDR"`
+	ExistingVPC              *ExistingVPC `yaml:"existingVPC"`
+	InstanceCIDR             string       `yaml:"instanceCIDR"`
+	ControllerIP             string       `yaml:"controllerIP"`
+	PodCIDR                  string       `yaml:"podCIDR"`
+	ServiceCIDR              string       `yaml:"serviceCIDR"`
+	KubernetesServiceIP      string       `yaml:"kubernetesServiceIP"`
+	DNSServiceIP             string       `yaml:"dnsServiceIP"`
+	K8sVer                   string       `yaml:"kubernetesVersion"`
+	AMI                      string       `yaml:"ami"`
 	//Calculated fields
 	APIServers        string `yaml:"-"`
 	SecureAPIServers  string `yaml:"-"`
 	ETCDEndpoints     string `yaml:"-"`
 	APIServerEndpoint string `yaml:"-"`
 
-    //TODO: we should work these in as config options
-    MinWorkersASG        int `yaml:"-"`
-    MaxWorkersASG        int `yaml:"-"`
+	//TODO: we should work these in as config options
+	MinWorkersASG int `yaml:"-"`
+	MaxWorkersASG int `yaml:"-"`
 
 	//Subconfig
 	TLSConfig     *TLSConfig            `yaml:"-"`
@@ -299,20 +301,20 @@ func newConfigFromBytes(d []byte) (*Config, error) {
 	out.SecureAPIServers = fmt.Sprintf("https://%s:443", out.ControllerIP)
 	out.APIServerEndpoint = fmt.Sprintf("https://%s", out.ExternalDNSName)
 
-    if out.WorkerSpotPrice == "" {
-        out.MinWorkersASG = 0
-    }else{
-        out.MinWorkersASG = out.WorkerCount
-    }
+	if out.WorkerSpotPrice == "" {
+		out.MinWorkersASG = 0
+	} else {
+		out.MinWorkersASG = out.WorkerCount
+	}
 
-    out.MaxWorkersASG = out.WorkerCount+1
+	out.MaxWorkersASG = out.WorkerCount + 1
 
-    if out.AMI == "" {
-        var err error
-        if out.AMI, err = getAMI(out.Region, out.ReleaseChannel); err != nil {
-            return nil, fmt.Errorf("Error getting region map: %v", err)
-        }
-    }
+	if out.AMI == "" {
+		var err error
+		if out.AMI, err = getAMI(out.Region, out.ReleaseChannel); err != nil {
+			return nil, fmt.Errorf("Error getting region map: %v", err)
+		}
+	}
 
 	return out, nil
 }

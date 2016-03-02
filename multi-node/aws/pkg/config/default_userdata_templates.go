@@ -229,7 +229,39 @@ coreos:
         [Install]
         RequiredBy=var-lib-etcd2.mount
 
+    - name: strip-etcd-data.service
+      enable: true
+      content: |
+        [Unit]
+        Description=strip non-portable stuff from etcd
+        Before=kubelet.service
+        After=etcd2.service
+        Requires=etcd2.service
+
+        [Service]
+        Restart=on-failure
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/strip-etcd-data
+
+        [Install]
+        RequiredBy=kubelet.service
+
+
 write_files:
+  - path: /opt/bin/strip-etcd-data
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      for f in $(etcdctl ls --recursive /);do
+          if [[ $f == */kube-system/* ]] || [[ $f == */default-token* ]];then
+            etcdctl rm $f
+          fi
+      done
+      etcdctl rm --recursive /registry/minions
+      etcdctl rm --recursive /registry/events
+      etcdctl rm --recursive /registry/serviceaccounts
   - path: /opt/bin/format-etcd2-volume
     permissions: 0700
     owner: root:root
