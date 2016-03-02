@@ -33,11 +33,11 @@ func NewDefaultConfig() *Config {
 		ControllerEtcdVolumeSize: 30,
 		WorkerCount:              1,
 		WorkerInstanceType:       "m3.medium",
-
-		TLSConfig:     newTLSConfig(),
-		UserData:      newUserDataConfig(),
-		KubeConfig:    &blobutil.NamedBuffer{Name: "kubeconfig"},
-		StackTemplate: &blobutil.NamedBuffer{Name: "stack-template.json"},
+		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
+		TLSConfig:                newTLSConfig(),
+		UserData:                 newUserDataConfig(),
+		KubeConfig:               &blobutil.NamedBuffer{Name: "kubeconfig"},
+		StackTemplate:            &blobutil.NamedBuffer{Name: "stack-template.json"},
 	}
 }
 
@@ -67,6 +67,7 @@ type Config struct {
 	KubernetesServiceIP      string       `yaml:"kubernetesServiceIP"`
 	DNSServiceIP             string       `yaml:"dnsServiceIP"`
 	K8sVer                   string       `yaml:"kubernetesVersion"`
+	HyperkubeImageRepo       string       `yaml:"hyperkubeImageRepo"`
 	AMI                      string       `yaml:"ami"`
 	//Calculated fields
 	APIServers        string `yaml:"-"`
