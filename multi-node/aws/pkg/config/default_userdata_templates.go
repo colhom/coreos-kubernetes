@@ -239,7 +239,6 @@ coreos:
         Requires=etcd2.service
 
         [Service]
-        Restart=on-failure
         Type=oneshot
         RemainAfterExit=yes
         ExecStart=/opt/bin/strip-etcd-data
