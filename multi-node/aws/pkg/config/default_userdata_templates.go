@@ -253,6 +253,11 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
+      # check that we are actually talking to etcd
+      etcdctl ls --recursive /
+
+      # we don't want the oneshot to fail if there is no data
+      set +e
       for f in $(etcdctl ls --recursive /);do
           if [[ $f == */kube-system/* ]] || [[ $f == */default-token* ]];then
             etcdctl rm $f
