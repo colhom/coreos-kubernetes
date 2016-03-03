@@ -26,6 +26,7 @@ coreos:
 
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment=KUBELET_VERSION={{.K8sVer}}
@@ -166,6 +167,7 @@ coreos:
       content: |
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
