@@ -267,6 +267,8 @@ write_files:
       etcdctl rm --recursive /registry/events
       etcdctl rm --recursive /registry/serviceaccounts
       etcdctl rm --recursive /registry/pods
+      echo 'Done!'
+
   - path: /opt/bin/format-etcd2-volume
     permissions: 0700
     owner: root:root
