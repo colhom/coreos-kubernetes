@@ -26,7 +26,7 @@ coreos:
 
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-        Environment="RKT_OPTS=--insecure-options=image"
+        Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment=KUBELET_VERSION={{.K8sVer}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
@@ -166,7 +166,7 @@ coreos:
       content: |
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-        Environment="RKT_OPTS=--insecure-options=image"
+        Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
@@ -230,7 +230,7 @@ coreos:
         RequiredBy=var-lib-etcd2.mount
 
     - name: strip-etcd-data.service
-      enable: true
+      enable: false
       content: |
         [Unit]
         Description=strip non-portable stuff from etcd
