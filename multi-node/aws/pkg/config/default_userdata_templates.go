@@ -27,7 +27,8 @@ coreos:
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
-        Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
+        ExecStartPre=/usr/bin/mkdir -p /var/log/fluentd-position
+        Environment="RKT_OPTS=--volume var-log-fluentd-position,kind=host,source=/var/log/fluentd-position --mount volume=var-log-fluentd-position,target=/var/log/fluentd-position --volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment=KUBELET_VERSION={{.K8sVer}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
@@ -168,7 +169,8 @@ coreos:
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
-        Environment="RKT_OPTS=--volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
+        ExecStartPre=/usr/bin/mkdir -p /var/log/fluentd-position
+        Environment="RKT_OPTS=--volume var-log-fluentd-position,kind=host,source=/var/log/fluentd-position --mount volume=var-log-fluentd-position,target=/var/log/fluentd-position --volume var-log-containers,kind=host,source=/var/log/containers --mount volume=var-log-containers,target=/var/log/containers"
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
