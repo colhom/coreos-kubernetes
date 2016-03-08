@@ -1,28 +1,26 @@
-package config
 
-const DefaultClusterConfig = `
 # Unique name of Kubernetes cluster. In order to deploy
 # more than one cluster into the same AWS account, this
 # name must not conflict with an existing cluster.
 
-clusterName: {{.ClusterName}}
+clusterName: kubernetes
 
 # DNS name routable to the Kubernetes controller nodes
 # from worker nodes and external clients. The deployer
 # is responsible for making this name routable
-externalDNSName: {{.ExternalDNSName}}
+externalDNSName: foo.coreos.com
 
 ### DO NOT CHANGE PARAMETERS ABOVE HERE ###
 
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.
-keyName: {{.KeyName}}
+keyName: foo
 
 # Region to provision Kubernetes cluster
-region: {{.Region}}
+region: us-west-1
 
 # Availability Zone to provision Kubernetes cluster
-availabilityZone: {{.AvailabilityZone}}
+availabilityZone: us-west-1
 
 # Instance type for controller node
 #controllerInstanceType: m3.medium
@@ -62,4 +60,3 @@ availabilityZone: {{.AvailabilityZone}}
 
 # IP address of Kubernetes dns service (must be contained by serviceCIDR)
 # dnsServiceIP: 10.3.0.10
-`
