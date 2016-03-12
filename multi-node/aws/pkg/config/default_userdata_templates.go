@@ -8,6 +8,21 @@ coreos:
     interface: $private_ipv4
     etcd_endpoints: {{.ETCDEndpoints}}
   units:
+    - name: var-lib-docker.mount
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Before=docker.service
+
+        [Mount]
+        What=/dev/xvdb
+        Where=/var/lib/docker
+        Type=ext3
+
+        [Install]
+        RequiredBy=docker.service
+
     - name: docker.service
       drop-ins:
         - name: 40-flannel.conf
@@ -146,6 +161,21 @@ coreos:
             Environment=ETCD_DATA_DIR=/var/lib/etcd2
             PermissionsStartOnly=true
             ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
+    - name: var-lib-docker.mount
+      enable: true
+      command: start
+      content: |
+        [Unit]
+        Before=docker.service
+
+        [Mount]
+        What=/dev/xvdb
+        Where=/var/lib/docker
+        Type=ext3
+
+        [Install]
+        RequiredBy=docker.service
+
     - name: docker.service
       drop-ins:
         - name: 40-flannel.conf
