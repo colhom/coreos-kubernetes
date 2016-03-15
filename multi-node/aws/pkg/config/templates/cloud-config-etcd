@@ -1,0 +1,76 @@
+#cloud-config
+coreos:
+  update:
+    reboot-strategy: "off"
+  units:
+    - name: etcd2.service
+      drop-ins:
+        - name: 20-etcd2-aws-cluster.conf
+          content: |
+            [Service]
+            EnvironmentFile=/etc/sysconfig/etcd-peers
+            Environment=ETCD_DATA_DIR=/var/lib/etcd2
+            Environment=ETCD_LISTEN_CLIENT_URLS=http://localhost:2379,http://$private_ipv4:2379
+            Environment=ETCD_ADVERTISE_CLIENT_URLS=http://localhost:2379,http://$private_ipv4:2379
+            Environment=ETCD_LISTEN_PEER_URLS=http://$private_ipv4:2380
+            Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://$private_ipv4:2380
+            PermissionsStartOnly=true
+            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
+      enable: true
+      command: start
+
+    - name: etcd2-aws-cluster.service
+      enable: true
+      content: |
+        [Unit]
+        Before=etcd2.service
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/docker run --rm -v /etc/sysconfig:/etc/sysconfig monsantoco/etcd-aws-cluster
+        RemainAfterExit=yes
+        [Install]
+        RequiredBy=etcd2.service
+
+    - name: var-lib-etcd2.mount
+      enable: true
+      content: |
+        [Unit]
+        Before=etcd2.service
+
+        [Mount]
+        What=/dev/xvdf
+        Where=/var/lib/etcd2
+        Type=ext4
+
+        [Install]
+        RequiredBy=etcd2.service
+
+    - name: format-etcd2-volume.service
+      enable: true
+      content: |
+        [Unit]
+        Description=Formats etcd2 ebs volume
+        After=dev-xvdf.device
+        Requires=dev-xvdf.device
+        Before=var-lib-etcd2.mount
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/ext4-format-volume-once /dev/xvdf
+
+        [Install]
+        RequiredBy=var-lib-etcd2.mount
+
+write_files:
+  - path: /opt/bin/ext4-format-volume-once
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      if [[ "$(wipefs -n -p $1 | grep ext4)" == "" ]];then
+        mkfs.ext4 $1
+      else
+        echo "volume $1 is already formatted"
+      fi

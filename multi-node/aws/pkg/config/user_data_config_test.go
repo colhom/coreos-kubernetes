@@ -35,6 +35,10 @@ func TestCloudConfigTemplating(t *testing.T) {
 			Name:     "CloudConfigController",
 			Template: CloudConfigController,
 		},
+		{
+			Name:     "CloudConfigEtcd",
+			Template: CloudConfigEtcd,
+		},
 	} {
 		tmpl, err := template.New(cloudTemplate.Name).Parse(string(cloudTemplate.Template))
 		if err != nil {
