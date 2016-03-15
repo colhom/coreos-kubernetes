@@ -29,6 +29,7 @@ func init() {
 	cmdInit.Flags().StringVar(&initOpts.Region, "region", "", "The aws region to deploy to")
 	cmdInit.Flags().StringVar(&initOpts.AvailabilityZone, "availability-zone", "", "The aws availability-zone to deploy to")
 	cmdInit.Flags().StringVar(&initOpts.KeyName, "key-name", "", "AWS key-pair for ssh access to nodes")
+	cmdInit.Flags().StringVar(&initOpts.KMSKeyARN, "kms-key-arn", "", "AWS key-pair for ssh access to nodes")
 }
 
 func runCmdInit(cmd *cobra.Command, args []string) error {
@@ -41,6 +42,7 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		{"--region", initOpts.Region},
 		{"--availability-zone", initOpts.AvailabilityZone},
 		{"--key-name", initOpts.KeyName},
+		{"--kms-key-arn", initOpts.KMSKeyARN},
 	}
 	var missing []string
 	for _, req := range required {

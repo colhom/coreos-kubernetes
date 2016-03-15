@@ -14,7 +14,7 @@ import (
 	"text/template"
 
 	"github.com/coreos/coreos-cloudinit/config/validate"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -89,9 +89,10 @@ type Cluster struct {
 	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"`
 	DNSServiceIP             string `yaml:"dnsServiceIP"`
 	K8sVer                   string `yaml:"kubernetesVersion"`
+	KMSKeyARN                string `yaml:"kmsKeyArn"`
 }
 
-func (c Cluster) Config(tlsConfig *RawTLSAssets) (*Config, error) {
+func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
 	config.ETCDEndpoints = fmt.Sprintf("http://%s:2379", c.ControllerIP)
 	config.APIServers = fmt.Sprintf("http://%s:8080", c.ControllerIP)
@@ -102,12 +103,6 @@ func (c Cluster) Config(tlsConfig *RawTLSAssets) (*Config, error) {
 	if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
 		return nil, fmt.Errorf("failed getting AMI for config: %v", err)
 	}
-
-	compact, err := tlsConfig.Compact()
-	if err != nil {
-		return nil, fmt.Errorf("failed to compress TLS assets: %v", err)
-	}
-	config.TLSConfig = compact
 
 	return &config, nil
 }
@@ -151,7 +146,11 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 	}
 	stackConfig := stackConfig{}
 
-	if stackConfig.Config, err = c.Config(assets); err != nil {
+	if stackConfig.Config, err = c.Config(); err != nil {
+		return nil, err
+	}
+
+	if err := stackConfig.Config.CompactTLSAssets(assets); err != nil {
 		return nil, err
 	}
 
@@ -241,6 +240,18 @@ type Config struct {
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
+}
+
+//This functionality now requires AWS API access
+//Separated out from cluster.Config() so that we can only compact
+//assets on command=up
+func (c *Config) CompactTLSAssets(tlsConfig *RawTLSAssets) error {
+	compact, err := tlsConfig.Compact(c)
+	if err != nil {
+		return fmt.Errorf("failed to compress TLS assets: %v", err)
+	}
+	c.TLSConfig = compact
+	return nil
 }
 
 func (cfg Cluster) valid() error {

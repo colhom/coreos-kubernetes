@@ -18,9 +18,13 @@ func TestCloudConfigTemplating(t *testing.T) {
 		t.Fatalf("Error generating default assets: %v", err)
 	}
 
-	cfg, err := cluster.Config(assets)
+	cfg, err := cluster.Config()
 	if err != nil {
 		t.Fatalf("Failed to create config: %v", err)
+	}
+
+	if err := cfg.CompactTLSAssets(assets); err != nil {
+		t.Fatalf("Error compacting tls assets: %v", err)
 	}
 
 	for _, cloudTemplate := range []struct {

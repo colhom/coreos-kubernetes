@@ -40,6 +40,23 @@ coreos:
         [Install]
         WantedBy=multi-user.target
 
+    - name: decrypt-tls-assets.service
+      enable: {{ne .KMSKeyARN ""}}
+      content: |
+        [Unit]
+        Description=decrypt kubelet tls assets using amazon kms
+        Before=kubelet.service
+        After=docker.service
+        Requires=docker.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/decrypt-tls-assets
+
+        [Install]
+        RequiredBy=kubelet.service
+
 write_files:
   - path: /etc/kubernetes/ssl/worker.pem
     encoding: gzip+base64
@@ -52,6 +69,18 @@ write_files:
   - path: /etc/kubernetes/ssl/ca.pem
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
+
+  - path: /opt/bin/decrypt-tls-assets
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      for encKey in $(find /etc/kubernetes/ssl/*.pem);do
+        tmpPath="/tmp/$(basename $encKey).tmp"
+        docker run --rm -v /etc/kubernetes/ssl:/etc/kubernetes/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
+        mv  $tmpPath $encKey
+      done
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
     content: |

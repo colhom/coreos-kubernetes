@@ -8,6 +8,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/kms"
+
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/tlsutil"
 )
 
@@ -170,15 +174,32 @@ func compressData(d []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(buff.Bytes()), nil
 }
 
-func (r *RawTLSAssets) Compact() (*CompactTLSAssets, error) {
+func (r *RawTLSAssets) Compact(cfg *Config) (*CompactTLSAssets, error) {
+
+	awsConfig := aws.NewConfig()
+	awsConfig = awsConfig.WithRegion(cfg.Region)
+	kmsSvc := kms.New(session.New(awsConfig))
+
 	var err error
 	compact := func(data []byte) string {
 		if err != nil {
 			return ""
 		}
+
+		if cfg.KMSKeyARN != "" {
+			encryptInput := kms.EncryptInput{
+				KeyId:     aws.String(cfg.KMSKeyARN),
+				Plaintext: data,
+			}
+
+			var encryptOutput *kms.EncryptOutput
+			if encryptOutput, err = kmsSvc.Encrypt(&encryptInput); err != nil {
+				return ""
+			}
+			data = encryptOutput.CiphertextBlob
+		}
 		var out string
-		out, err = compressData(data)
-		if err != nil {
+		if out, err = compressData(data); err != nil {
 			return ""
 		}
 		return out

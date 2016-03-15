@@ -145,7 +145,12 @@
                   "Action": "elasticloadbalancing:*",
                   "Effect": "Allow",
                   "Resource": "*"
-                }
+                },
+		{
+		  "Action" : "kms:Decrypt",
+		  "Effect" : "Allow",
+		  "Resource" : "{{.KMSKeyARN}}"
+		}
               ],
               "Version": "2012-10-17"
             },
@@ -192,7 +197,12 @@
                   "Action": "ec2:DetachVolume",
                   "Effect": "Allow",
                   "Resource": "*"
-                }
+                },
+		{
+		  "Action" : "kms:Decrypt",
+		  "Effect" : "Allow",
+		  "Resource" : "{{.KMSKeyARN}}"
+		}
               ],
               "Version": "2012-10-17"
             },

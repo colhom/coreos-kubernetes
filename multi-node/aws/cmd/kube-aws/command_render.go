@@ -44,7 +44,7 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a Config and attempt to render a kubeconfig for it.
-	cfg, err := cluster.Config(assets)
+	cfg, err := cluster.Config()
 	if err != nil {
 		return fmt.Errorf("Failed to create config: %v", err)
 	}

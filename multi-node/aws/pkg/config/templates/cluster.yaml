@@ -21,6 +21,9 @@ region: {{.Region}}
 # Availability Zone to provision Kubernetes cluster
 availabilityZone: {{.AvailabilityZone}}
 
+# ARN of the KMS key used to encrypt TLS assets.
+kmsKeyArn: "{{.KMSKeyARN}}"
+
 # Instance type for controller node
 #controllerInstanceType: m3.medium
 

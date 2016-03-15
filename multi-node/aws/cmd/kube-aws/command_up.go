@@ -46,7 +46,9 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		if err := ioutil.WriteFile(templatePath, data, 0600); err != nil {
 			return fmt.Errorf("Error writing %s : %v", templatePath, err)
 		}
-		fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
+		if conf.KMSKeyARN == "" {
+			fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
+		}
 		return nil
 	}
 	cluster := cluster.New(conf, upOpts.awsDebug)
