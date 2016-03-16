@@ -33,7 +33,8 @@ func newDefaultCluster() *Cluster {
 		ServiceCIDR:              "10.3.0.0/24",
 		KubernetesServiceIP:      "10.3.0.1",
 		DNSServiceIP:             "10.3.0.10",
-		K8sVer:                   "v1.1.4",
+		K8sVer:                   "v1.1.8_coreos.0",
+		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
 		ControllerInstanceType:   "m3.medium",
 		ControllerRootVolumeSize: 30,
 		WorkerCount:              1,
@@ -89,6 +90,7 @@ type Cluster struct {
 	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"`
 	DNSServiceIP             string `yaml:"dnsServiceIP"`
 	K8sVer                   string `yaml:"kubernetesVersion"`
+	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
 	KMSKeyARN                string `yaml:"kmsKeyArn"`
 }
 
