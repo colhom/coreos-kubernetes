@@ -14,17 +14,17 @@ if [ -n "$(git diff --shortstat 2> /dev/null | tail -n1)" ]; then
     VERSION="${VERSION}+dirty"
 fi
 
-export GOPATH="$(pwd)/_output"
-export KUBEAWS="$GOPATH/src/github.com/coreos/coreos-kubernetes/multi-node/aws"
+GOPATH_VENDOR="$(pwd)/_gopath-vendor"
+GOPATH_KUBE_AWS="$(pwd)/_gopath-kube-aws"
+KUBE_AWS_DIR="${GOPATH_KUBE_AWS}/src/github.com/coreos/coreos-kubernetes/multi-node"
 
-if [ -d $GOAPTH ]; then
-    rm -rf $GOPATH
-fi
+rm -rf $GOPATH_VENDOR $GOPATH_KUBE_AWS
 
-mkdir -p $GOPATH/src
-cp -r ./vendor/* $GOPATH/src
-mkdir -p $KUBEAWS
-cp -r ./pkg $KUBEAWS/pkg
-cp -r ./cmd $KUBEAWS/cmd
+mkdir -p $GOPATH_VENDOR
+mkdir -p $KUBE_AWS_DIR
 
+ln -s $(pwd)/vendor $GOPATH_VENDOR/src
+ln -s $(pwd) $KUBE_AWS_DIR/aws
+
+export GOPATH="${GOPATH_VENDOR}:${GOPATH_KUBE_AWS}"
 go build -ldflags "-X main.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws

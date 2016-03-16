@@ -2,4 +2,5 @@
 /bin
 /assets
 *~
-_output
+/_gopath-kube-aws
+/_gopath-vendor
