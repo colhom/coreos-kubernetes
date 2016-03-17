@@ -152,9 +152,12 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		return nil, err
 	}
 
-	if err := stackConfig.Config.CompactTLSAssets(assets); err != nil {
-		return nil, err
+	compactAssets, err := assets.Compact(stackConfig.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compress TLS assets: %v", err)
 	}
+
+	stackConfig.Config.TLSConfig = compactAssets
 
 	if stackConfig.UserDataWorker, err = execute(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
@@ -242,15 +245,6 @@ type Config struct {
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
-}
-
-func (c *Config) CompactTLSAssets(tlsConfig *RawTLSAssets) error {
-	compact, err := tlsConfig.Compact(c)
-	if err != nil {
-		return fmt.Errorf("failed to compress TLS assets: %v", err)
-	}
-	c.TLSConfig = compact
-	return nil
 }
 
 func (cfg Cluster) valid() error {
