@@ -11,10 +11,11 @@ import (
 
 var (
 	cmdDestroy = &cobra.Command{
-		Use:   "destroy",
-		Short: "Destroy an existing Kubernetes cluster",
-		Long:  ``,
-		RunE:  runCmdDestroy,
+		Use:          "destroy",
+		Short:        "Destroy an existing Kubernetes cluster",
+		Long:         ``,
+		RunE:         runCmdDestroy,
+		SilenceUsage: true,
 	}
 	destroyOpts = struct {
 		awsDebug bool

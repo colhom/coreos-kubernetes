@@ -10,10 +10,11 @@ import (
 
 var (
 	cmdStatus = &cobra.Command{
-		Use:   "status",
-		Short: "Describe an existing Kubernetes cluster",
-		Long:  ``,
-		RunE:  runCmdStatus,
+		Use:          "status",
+		Short:        "Describe an existing Kubernetes cluster",
+		Long:         ``,
+		RunE:         runCmdStatus,
+		SilenceUsage: true,
 	}
 )
 

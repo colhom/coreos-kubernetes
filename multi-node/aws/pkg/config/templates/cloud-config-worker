@@ -25,7 +25,7 @@ coreos:
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
-        ExecStart=/usr/lib/coreos/kubelet-wrapper
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api_servers={{.SecureAPIServers}} \
         --register-node=true \
         --allow-privileged=true \

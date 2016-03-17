@@ -11,10 +11,11 @@ import (
 
 var (
 	cmdUp = &cobra.Command{
-		Use:   "up",
-		Short: "Create a new Kubernetes cluster",
-		Long:  ``,
-		RunE:  runCmdUp,
+		Use:          "up",
+		Short:        "Create a new Kubernetes cluster",
+		Long:         ``,
+		RunE:         runCmdUp,
+		SilenceUsage: true,
 	}
 
 	upOpts = struct {

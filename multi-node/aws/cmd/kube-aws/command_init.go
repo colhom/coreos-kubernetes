@@ -13,10 +13,11 @@ import (
 
 var (
 	cmdInit = &cobra.Command{
-		Use:   "init",
-		Short: "Initialize default kube-aws cluster configuration",
-		Long:  ``,
-		RunE:  runCmdInit,
+		Use:          "init",
+		Short:        "Initialize default kube-aws cluster configuration",
+		Long:         ``,
+		RunE:         runCmdInit,
+		SilenceUsage: true,
 	}
 
 	initOpts = config.Config{}
@@ -29,7 +30,7 @@ func init() {
 	cmdInit.Flags().StringVar(&initOpts.Region, "region", "", "The aws region to deploy to")
 	cmdInit.Flags().StringVar(&initOpts.AvailabilityZone, "availability-zone", "", "The aws availability-zone to deploy to")
 	cmdInit.Flags().StringVar(&initOpts.KeyName, "key-name", "", "AWS key-pair for ssh access to nodes")
-	cmdInit.Flags().StringVar(&initOpts.KMSKeyARN, "kms-key-arn", "", "AWS key-pair for ssh access to nodes")
+	cmdInit.Flags().StringVar(&initOpts.KMSKeyARN, "kms-key-arn", "", "ARN of the AWS KMS key for encrypting TLS assets")
 }
 
 func runCmdInit(cmd *cobra.Command, args []string) error {

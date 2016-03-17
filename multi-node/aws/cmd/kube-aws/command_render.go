@@ -13,10 +13,11 @@ import (
 
 var (
 	cmdRender = &cobra.Command{
-		Use:   "render",
-		Short: "Render a CloudFormation template",
-		Long:  ``,
-		RunE:  runCmdRender,
+		Use:          "render",
+		Short:        "Render a CloudFormation template",
+		Long:         ``,
+		RunE:         runCmdRender,
+		SilenceUsage: true,
 	}
 )
 

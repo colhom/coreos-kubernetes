@@ -9,8 +9,6 @@ clusterName: {{.ClusterName}}
 # is responsible for making this name routable
 externalDNSName: {{.ExternalDNSName}}
 
-### DO NOT CHANGE PARAMETERS ABOVE HERE ###
-
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.
 keyName: {{.KeyName}}

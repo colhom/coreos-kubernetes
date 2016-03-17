@@ -11,10 +11,11 @@ import (
 
 var (
 	cmdValidate = &cobra.Command{
-		Use:   "validate",
-		Short: "Validate cluster assets",
-		Long:  ``,
-		RunE:  runCmdValidate,
+		Use:          "validate",
+		Short:        "Validate cluster assets",
+		Long:         ``,
+		RunE:         runCmdValidate,
+		SilenceUsage: true,
 	}
 
 	validateOpts = struct {

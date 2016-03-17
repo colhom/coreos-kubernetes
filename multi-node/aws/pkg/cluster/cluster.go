@@ -143,7 +143,6 @@ func (c *Cluster) Update(stackBody string) (string, error) {
 	}
 }
 
-//TODO: validate cluster
 func (c *Cluster) Info() (*ClusterInfo, error) {
 	resources := make([]cloudformation.StackResourceSummary, 0)
 	req := cloudformation.ListStackResourcesInput{

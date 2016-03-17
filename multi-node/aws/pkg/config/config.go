@@ -87,7 +87,7 @@ type Cluster struct {
 	ControllerIP             string `yaml:"controllerIP"`
 	PodCIDR                  string `yaml:"podCIDR"`
 	ServiceCIDR              string `yaml:"serviceCIDR"`
-	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"`
+	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"` //TODO(chom): remove KubernetesServiceIP parameter, it is not configurable
 	DNSServiceIP             string `yaml:"dnsServiceIP"`
 	K8sVer                   string `yaml:"kubernetesVersion"`
 	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
@@ -244,9 +244,6 @@ type Config struct {
 	TLSConfig *CompactTLSAssets
 }
 
-//This functionality now requires AWS API access
-//Separated out from cluster.Config() so that we can only compact
-//assets on command=up
 func (c *Config) CompactTLSAssets(tlsConfig *RawTLSAssets) error {
 	compact, err := tlsConfig.Compact(c)
 	if err != nil {
