@@ -32,8 +32,14 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to read cluster config: %v", err)
 	}
 
+	// Create a Config and attempt to render a kubeconfig for it.
+	cfg, err := cluster.Config()
+	if err != nil {
+		return fmt.Errorf("Failed to create config: %v", err)
+	}
+
 	// Generate default TLS assets.
-	assets, err := cluster.NewTLSAssets()
+	assets, err := cfg.NewTLSAssets()
 	if err != nil {
 		return fmt.Errorf("Error generating default assets: %v", err)
 	}
@@ -44,11 +50,6 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error create assets: %v", err)
 	}
 
-	// Create a Config and attempt to render a kubeconfig for it.
-	cfg, err := cluster.Config()
-	if err != nil {
-		return fmt.Errorf("Failed to create config: %v", err)
-	}
 	tmpl, err := template.New("kubeconfig.yaml").Parse(string(config.KubeConfigTemplate))
 	if err != nil {
 		return fmt.Errorf("Failed to parse default kubeconfig template: %v", err)

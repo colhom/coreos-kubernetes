@@ -13,14 +13,15 @@ func TestCloudConfigTemplating(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to load cluster config: %v", err)
 	}
-	assets, err := cluster.NewTLSAssets()
-	if err != nil {
-		t.Fatalf("Error generating default assets: %v", err)
-	}
 
 	cfg, err := cluster.Config()
 	if err != nil {
 		t.Fatalf("Failed to create config: %v", err)
+	}
+
+	assets, err := cfg.NewTLSAssets()
+	if err != nil {
+		t.Fatalf("Error generating default assets: %v", err)
 	}
 
 	compactAssets, err := assets.Compact(cfg)

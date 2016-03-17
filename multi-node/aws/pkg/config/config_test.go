@@ -19,7 +19,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.5.100.101
 `, `
 vpcCIDR: 10.4.0.0/16
@@ -27,7 +26,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 10.6.0.0/16
 serviceCIDR: 10.5.0.0/16
-kubernetesServiceIP: 10.5.100.100
 dnsServiceIP: 10.5.100.101
 `,
 }
@@ -39,7 +37,6 @@ instanceCIDR: 10.5.3.0/24 #instanceCIDR not in vpcCIDR
 controllerIP: 10.5.3.5
 podCIDR: 10.6.0.0/16
 serviceCIDR: 10.5.0.0/16
-kubernetesServiceIP: 10.5.100.100
 dnsServiceIP: 10.5.100.101
 `, `
 vpcCIDR: 10.4.3.0/16
@@ -47,15 +44,13 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.10.100.100 #kubernetesServiceIP not in service CIDR
-dnsServiceIP: 172.5.100.101
+dnsServiceIP: 172.5.0.1 #dnsServiceIP conflicts with kubernetesServiceIP
 `, `
 vpcCIDR: 10.4.3.0/16
 instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 10.4.0.0/16 #vpcCIDR overlaps with podCIDR
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.5.100.101
 
 `, `
@@ -64,7 +59,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.6.100.101 #dnsServiceIP not in service CIDR
 `,
 }

@@ -39,7 +39,7 @@ type CompactTLSAssets struct {
 	AdminKey      string
 }
 
-func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
+func (c *Config) NewTLSAssets() (*RawTLSAssets, error) {
 	// Generate keys for the various components.
 	keys := make([]*rsa.PrivateKey, 4)
 	var err error
