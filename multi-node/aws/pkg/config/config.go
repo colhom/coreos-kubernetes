@@ -31,7 +31,6 @@ func newDefaultCluster() *Cluster {
 		ControllerIP:             "10.0.0.50",
 		PodCIDR:                  "10.2.0.0/16",
 		ServiceCIDR:              "10.3.0.0/24",
-		KubernetesServiceIP:      "10.3.0.1",
 		DNSServiceIP:             "10.3.0.10",
 		K8sVer:                   "v1.1.8_coreos.0",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
@@ -87,7 +86,6 @@ type Cluster struct {
 	ControllerIP             string `yaml:"controllerIP"`
 	PodCIDR                  string `yaml:"podCIDR"`
 	ServiceCIDR              string `yaml:"serviceCIDR"`
-	KubernetesServiceIP      string `yaml:"kubernetesServiceIP"` //TODO(chom): remove KubernetesServiceIP parameter, it is not configurable
 	DNSServiceIP             string `yaml:"dnsServiceIP"`
 	K8sVer                   string `yaml:"kubernetesVersion"`
 	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
@@ -96,12 +94,18 @@ type Cluster struct {
 
 func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
+
+	_, serviceNet, err := net.ParseCIDR(config.ServiceCIDR)
+	if err != nil {
+		return nil, fmt.Errorf("invalid serviceCIDR: %v", err)
+	}
+
+	config.KubernetesServiceIP = incrementIP(serviceNet.IP).String()
 	config.ETCDEndpoints = fmt.Sprintf("http://%s:2379", c.ControllerIP)
 	config.APIServers = fmt.Sprintf("http://%s:8080", c.ControllerIP)
 	config.SecureAPIServers = fmt.Sprintf("https://%s:443", c.ControllerIP)
 	config.APIServerEndpoint = fmt.Sprintf("https://%s", c.ExternalDNSName)
 
-	var err error
 	if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
 		return nil, fmt.Errorf("failed getting AMI for config: %v", err)
 	}
@@ -237,11 +241,12 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions) ([]byte, error) 
 type Config struct {
 	Cluster
 
-	ETCDEndpoints     string
-	APIServers        string
-	SecureAPIServers  string
-	APIServerEndpoint string
-	AMI               string
+	KubernetesServiceIP string
+	ETCDEndpoints       string
+	APIServers          string
+	SecureAPIServers    string
+	APIServerEndpoint   string
+	AMI                 string
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
@@ -310,12 +315,10 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
 	}
 
-	kubernetesServiceIPAddr := net.ParseIP(cfg.KubernetesServiceIP)
-	if kubernetesServiceIPAddr == nil {
-		return fmt.Errorf("Invalid kubernetesServiceIP: %s", cfg.KubernetesServiceIP)
-	}
-	if !serviceNet.Contains(kubernetesServiceIPAddr) {
-		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, cfg.KubernetesServiceIP)
+	//kubernetes service ip is ALWAYS the first IP address slot in the service CIDR
+	kubernetesServiceIP := incrementIP(serviceNet.IP)
+	if !serviceNet.Contains(kubernetesServiceIP) {
+		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, kubernetesServiceIP.String())
 	}
 
 	dnsServiceIPAddr := net.ParseIP(cfg.DNSServiceIP)
@@ -326,5 +329,24 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", cfg.ServiceCIDR, cfg.DNSServiceIP)
 	}
 
+	if dnsServiceIPAddr.Equal(kubernetesServiceIP) {
+		return fmt.Errorf("dnsServiceIp (%s) conflicts with kubernetesServiceIp", dnsServiceIPAddr)
+	}
+
 	return nil
+}
+
+//Return next IP address in network range
+func incrementIP(netIP net.IP) net.IP {
+	ip := make(net.IP, len(netIP))
+	copy(ip, netIP)
+
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
+
+	return ip
 }
