@@ -13,6 +13,8 @@ import (
 	"strings"
 	"text/template"
 
+	"encoding/binary"
+
 	"github.com/coreos/coreos-cloudinit/config/validate"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -274,11 +276,17 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	instancesNetIP, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
+	_, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid instanceCIDR: %v", err)
 	}
-	if !vpcNet.Contains(instancesNetIP) {
+
+	//Verify vpcCIDR contains instanceCIDR
+	vpcContainsInstances, err := netContains(vpcNet, instancesNet)
+	if err != nil {
+		return err
+	}
+	if !vpcContainsInstances {
 		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
 			cfg.VPCCIDR,
 			cfg.InstanceCIDR,
@@ -289,6 +297,7 @@ func (cfg Cluster) valid() error {
 	if controllerIPAddr == nil {
 		return fmt.Errorf("invalid controllerIP: %s", cfg.ControllerIP)
 	}
+	//Verify instanceCIDR contains the controllerIP
 	if !instancesNet.Contains(controllerIPAddr) {
 		return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
 			cfg.InstanceCIDR,
@@ -296,23 +305,30 @@ func (cfg Cluster) valid() error {
 		)
 	}
 
-	podNetIP, podNet, err := net.ParseCIDR(cfg.PodCIDR)
+	//Verify vpcNet does not overlap with podNet
+	_, podNet, err := net.ParseCIDR(cfg.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
 	}
-	if vpcNet.Contains(podNetIP) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
+	vpcNetOverlapsPodNet, err := netOverlaps(vpcNet, podNet)
+	if err != nil {
+		return err
+	}
+	if vpcNetOverlapsPodNet {
+		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", vpcNet, podNet)
 	}
 
-	serviceNetIP, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
+	//Verify vpcNet does not overlap with serviceNet
+	_, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
-	if vpcNet.Contains(serviceNetIP) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", cfg.VPCCIDR, cfg.ServiceCIDR)
+	vpcNetOverlapsServiceNet, err := netOverlaps(vpcNet, serviceNet)
+	if err != nil {
+		return err
 	}
-	if podNet.Contains(serviceNetIP) || serviceNet.Contains(podNetIP) {
-		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
+	if vpcNetOverlapsServiceNet {
+		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", vpcNet, serviceNet)
 	}
 
 	//kubernetes service ip is ALWAYS the first IP address slot in the service CIDR
@@ -321,6 +337,7 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, kubernetesServiceIP.String())
 	}
 
+	//Verify dnsServiceIP is contained by serviceNet
 	dnsServiceIPAddr := net.ParseIP(cfg.DNSServiceIP)
 	if dnsServiceIPAddr == nil {
 		return fmt.Errorf("Invalid dnsServiceIP: %s", cfg.DNSServiceIP)
@@ -329,11 +346,68 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", cfg.ServiceCIDR, cfg.DNSServiceIP)
 	}
 
+	//Verify dns and kubernetes service ip don't conflict
 	if dnsServiceIPAddr.Equal(kubernetesServiceIP) {
 		return fmt.Errorf("dnsServiceIp (%s) conflicts with kubernetesServiceIp", dnsServiceIPAddr)
 	}
 
 	return nil
+}
+
+//Does the larger net entirely contain the smaller net?
+func netContains(larger *net.IPNet, smaller *net.IPNet) (bool, error) {
+	broadcastSmaller, err := broadcastAddress(smaller)
+	if err != nil {
+		return false, err
+	}
+	//Verify that larger network contains limit points for smaller network
+	contains := larger.Contains(smaller.IP) && larger.Contains(broadcastSmaller)
+	return contains, nil
+}
+
+//Do two networks overlap?
+func netOverlaps(net1, net2 *net.IPNet) (bool, error) {
+	broadcast1, err := broadcastAddress(net1)
+	if err != nil {
+		return false, err
+	}
+
+	broadcast2, err := broadcastAddress(net2)
+	if err != nil {
+		return false, err
+	}
+
+	//net1 contains either of net2's limit points, or net2 contains any of net1's lmit points
+	overlaps := net1.Contains(net2.IP) || net1.Contains(broadcast2) || net2.Contains(net1.IP) || net2.Contains(broadcast1)
+	return overlaps, nil
+}
+
+//Get broadcast address for given network
+//The total IP range for a network is [ IPNet.IP, broadcast(IPNet) ]
+func broadcastAddress(network *net.IPNet) (broadcast net.IP, err error) {
+	if len(network.IP) != net.IPv4len {
+		err = fmt.Errorf("network %s is not 4-byte (ipv4) address scheme", network)
+		return
+	}
+
+	ones, bits := network.Mask.Size()
+
+	if ones == 0 && bits == 0 {
+		err = fmt.Errorf("mask (%s) for cidr (%s) is not in canonical form", network.Mask.String(), network.String())
+		return
+	}
+
+	networkBitCount := uint(bits - ones)
+
+	networkNumber := binary.BigEndian.Uint32(network.IP)
+
+	ipCount := uint32((1 << networkBitCount) - 1)
+
+	broadcastNumber := networkNumber + ipCount
+	broadcast = make(net.IP, net.IPv4len)
+	binary.BigEndian.PutUint32(broadcast, broadcastNumber)
+
+	return
 }
 
 //Return next IP address in network range

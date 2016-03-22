@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"testing"
 )
 
@@ -137,6 +138,48 @@ dnsServiceIP: 10.6.142.100
 		if config.KubernetesServiceIP != testConfig.KubernetesServiceIP {
 			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s", config.KubernetesServiceIP, testConfig.KubernetesServiceIP)
 		}
+	}
+
+}
+
+func TestBroadcastAddress(t *testing.T) {
+	cidrs := []struct {
+		CIDR      string
+		Broadcast string
+	}{
+		{
+			CIDR:      "10.10.10.160/28",
+			Broadcast: "10.10.10.175",
+		},
+		{
+			CIDR:      "172.4.18.206/30",
+			Broadcast: "172.4.18.207",
+		},
+		{
+			CIDR:      "172.6.30.0/20",
+			Broadcast: "172.6.31.255",
+		},
+	}
+
+	for _, cidr := range cidrs {
+		_, network, err := net.ParseCIDR(cidr.CIDR)
+		if err != nil {
+			t.Errorf("Error parsing cidr %s : %v", cidr.CIDR, err)
+			continue
+		}
+
+		expectedBroadcast := net.ParseIP(cidr.Broadcast)
+
+		broadcast, err := broadcastAddress(network)
+		if err != nil {
+			t.Errorf("Error getting broadcast address: %v", err)
+			continue
+		}
+
+		if !broadcast.Equal(expectedBroadcast) {
+			t.Errorf("Got broadcast ip %s, expected %s: cidr = %s", broadcast, expectedBroadcast, network)
+		}
+
 	}
 
 }
