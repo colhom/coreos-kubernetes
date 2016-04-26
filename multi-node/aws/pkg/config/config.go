@@ -46,6 +46,7 @@ func newDefaultCluster() *Cluster {
 		WorkerRootVolumeSize:     30,
 		CreateRecordSet:          false,
 		RecordSetTTL:             300,
+		Subnets:                  []Subnet{},
 	}
 }
 
@@ -73,6 +74,15 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 	// HostedZone needs to end with a '.', amazon will not append it for you.
 	// as it will with RecordSets
 	c.HostedZone = WithTrailingDot(c.HostedZone)
+
+	if len(c.Subnets) == 0 {
+		c.Subnets = []Subnet{
+			{
+				AvailabilityZone: c.AvailabilityZone,
+				InstanceCIDR:     c.InstanceCIDR,
+			},
+		}
+	}
 
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
@@ -108,6 +118,12 @@ type Cluster struct {
 	RecordSetTTL             int               `yaml:"recordSetTTL"`
 	HostedZone               string            `yaml:"hostedZone"`
 	StackTags                map[string]string `yaml:"stackTags"`
+	Subnets                  []Subnet          `yaml:"subnets"`
+}
+
+type Subnet struct {
+	AvailabilityZone string `yaml:"availabilityZone"`
+	InstanceCIDR     string `yaml:"instanceCIDR"`
 }
 
 const (
@@ -366,9 +382,6 @@ func (cfg Cluster) valid() error {
 	if cfg.Region == "" {
 		return errors.New("region must be set")
 	}
-	if cfg.AvailabilityZone == "" {
-		return errors.New("availabilityZone must be set")
-	}
 	if cfg.ClusterName == "" {
 		return errors.New("clusterName must be set")
 	}
@@ -385,26 +398,32 @@ func (cfg Cluster) valid() error {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	_, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
-	if err != nil {
-		return fmt.Errorf("invalid instanceCIDR: %v", err)
-	}
-	if !vpcNet.Contains(instancesNet.IP) {
-		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
-			cfg.VPCCIDR,
-			cfg.InstanceCIDR,
-		)
-	}
-
 	controllerIPAddr := net.ParseIP(cfg.ControllerIP)
 	if controllerIPAddr == nil {
 		return fmt.Errorf("invalid controllerIP: %s", cfg.ControllerIP)
 	}
-	if !instancesNet.Contains(controllerIPAddr) {
-		return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
-			cfg.InstanceCIDR,
-			cfg.ControllerIP,
-		)
+
+	for i, subnet := range cfg.Subnets {
+		if subnet.AvailabilityZone == "" {
+			return fmt.Errorf("availabilityZone must be set for subnet #%d", i)
+		}
+		_, instancesNet, err := net.ParseCIDR(subnet.InstanceCIDR)
+		if err != nil {
+			return fmt.Errorf("invalid instanceCIDR for subnet #%d: %v", i, err)
+		}
+		if !vpcNet.Contains(instancesNet.IP) {
+			return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s) for subnet #%d",
+				cfg.VPCCIDR,
+				cfg.InstanceCIDR,
+				i,
+			)
+		}
+		if i == 0 && !instancesNet.Contains(controllerIPAddr) {
+			return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
+				subnet.InstanceCIDR,
+				cfg.ControllerIP,
+			)
+		}
 	}
 
 	_, podNet, err := net.ParseCIDR(cfg.PodCIDR)
