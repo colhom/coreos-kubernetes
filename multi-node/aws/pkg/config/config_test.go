@@ -2,6 +2,7 @@ package config
 
 import (
 	"net"
+	"reflect"
 	"testing"
 )
 
@@ -295,6 +296,142 @@ releaseChannel: non-existant #this release channel will never exist
 			t.Errorf(
 				"parsed release channel %s does not match config: %s",
 				c.ReleaseChannel,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := minimalConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
+
+}
+
+func TestMultipleSubnets(t *testing.T) {
+
+	validConfigs := []struct {
+		conf    string
+		subnets []Subnet
+	}{
+		{
+			conf: `
+# You can specify multiple subnets to be created in order to achieve H/A
+vpcCIDR: 10.4.3.0/16
+controllerIP: 10.4.3.50
+subnets:
+  - availabilityZone: ap-northeast-1a
+    instanceCIDR: 10.4.3.0/24
+  - availabilityZone: ap-northeast-1c
+    instanceCIDR: 10.4.4.0/24
+`,
+			subnets: []Subnet{
+				{
+					InstanceCIDR:     "10.4.3.0/24",
+					AvailabilityZone: "ap-northeast-1a",
+				},
+				{
+					InstanceCIDR:     "10.4.4.0/24",
+					AvailabilityZone: "ap-northeast-1c",
+				},
+			},
+		},
+		{
+			conf: `
+# Given AZ/CIDR, missing subnets fall-back to the single subnet with the AZ/CIDR given.
+vpcCIDR: 10.4.3.0/16
+controllerIP: 10.4.3.50
+availabilityZone: ap-northeast-1a
+instanceCIDR: 10.4.3.0/24
+`,
+			subnets: []Subnet{
+				{
+					AvailabilityZone: "ap-northeast-1a",
+					InstanceCIDR:     "10.4.3.0/24",
+				},
+			},
+		},
+		{
+			conf: `
+# Given AZ/CIDR, empty subnets fall-back to the single subnet with the AZ/CIDR given.
+vpcCIDR: 10.4.3.0/16
+controllerIP: 10.4.3.50
+availabilityZone: ap-northeast-1a
+instanceCIDR: 10.4.3.0/24
+subnets: []
+`,
+			subnets: []Subnet{
+				{
+					AvailabilityZone: "ap-northeast-1a",
+					InstanceCIDR:     "10.4.3.0/24",
+				},
+			},
+		},
+		{
+			conf: `
+# Given no AZ/CIDR, empty subnets fall-backs to the single subnet with the default az/cidr.
+availabilityZone: "ap-northeast-1a"
+subnets: []
+`,
+			subnets: []Subnet{
+				{
+					AvailabilityZone: "ap-northeast-1a",
+					InstanceCIDR:     "10.0.0.0/24",
+				},
+			},
+		},
+		{
+			conf: `
+# Missing subnets field fall-backs to the single subnet with the default az/cidr.
+availabilityZone: "ap-northeast-1a"
+`,
+			subnets: []Subnet{
+				{
+					AvailabilityZone: "ap-northeast-1a",
+					InstanceCIDR:     "10.0.0.0/24",
+				},
+			},
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+availabilityZone: "ap-northeast-1a"
+subnets:
+# Missing AZ like this
+# - availabilityZone: "ap-northeast-1a"
+- instanceCIDR: 10.0.0.0/24
+`,
+		`
+subnets:
+# Missing AZ like this
+# - availabilityZone: "ap-northeast-1a"
+- instanceCIDR: 10.0.0.0/24
+`,
+		`
+subnets:
+# Both AZ/instanceCIDR is given. This is O.K. but...
+- availabilityZone: "ap-northeast-1a"
+# instanceCIDR does not include the default controllerIP
+- instanceCIDR: 10.0.5.0/24
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := minimalConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Subnets, conf.subnets) {
+			t.Errorf(
+				"parsed subnets %s does not expected subnets %s in config: %s",
+				c.Subnets,
+				conf.subnets,
 				confBody,
 			)
 		}
