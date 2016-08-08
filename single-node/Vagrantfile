@@ -8,7 +8,7 @@ require 'yaml'
 
 Vagrant.require_version ">= 1.6.0"
 
-$update_channel = "stable"
+$update_channel = "alpha"
 
 CLUSTER_IP="10.3.0.1"
 NODE_IP = "172.17.4.99"
@@ -23,11 +23,10 @@ system("./../lib/init-ssl ssl admin kube-admin") or abort("failed generating adm
 Vagrant.configure("2") do |config|
   # always use Vagrant's insecure key
   config.ssh.insert_key = false
-
+  config.ssh.username = "core"
   config.vm.box = "coreos-%s" % $update_channel
   config.vm.box_version = ">= 962.0.0"
   config.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
-
   ["vmware_fusion", "vmware_workstation"].each do |vmware|
     config.vm.provider vmware do |v, override|
       v.vmx['numvcpus'] = 1
@@ -47,6 +46,13 @@ Vagrant.configure("2") do |config|
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
+  end
+
+  config.vm.provider :libvirt do |v|
+    v.graphics_type = "none"
+    v.machine_virtual_size = 30
+    v.cpus = 2
+    v.memory = NODE_MEMORY_SIZE
   end
 
   # plugin conflict

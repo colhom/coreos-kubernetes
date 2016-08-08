@@ -5,10 +5,10 @@ set -e
 export ETCD_ENDPOINTS="http://127.0.0.1:2379"
 
 # Specify the version (vX.Y.Z) of Kubernetes assets to deploy
-export K8S_VER=v1.3.4_coreos.0
+export K8S_VER=v1.4.0_alpha.2_coreos.chom
 
 # Hyperkube image repository to use.
-export HYPERKUBE_IMAGE_REPO=quay.io/coreos/hyperkube
+export HYPERKUBE_IMAGE_REPO=quay.io/colin_hom/hyperkube-amd64
 
 # The CIDR network to use for pod IPs.
 # Each pod launched in the cluster will be assigned an IP out of this range.
@@ -202,7 +202,7 @@ spec:
     - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
     - --client-ca-file=/etc/kubernetes/ssl/ca.pem
     - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-    - --runtime-config=extensions/v1beta1/networkpolicies=true
+    - --runtime-config=extensions/v1beta1/networkpolicies=true,extensions/v1beta1/storage=true
     livenessProbe:
       httpGet:
         host: 127.0.0.1
@@ -254,6 +254,7 @@ spec:
     - --master=http://127.0.0.1:8080
     - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
     - --root-ca-file=/etc/kubernetes/ssl/ca.pem
+    - --enable-hostpath-provisioner=true
     resources:
       requests:
         cpu: 200m
