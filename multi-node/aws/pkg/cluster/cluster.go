@@ -233,6 +233,12 @@ func (c *Cluster) createStack(cfSvc cloudformationService, stackBody string) (*c
 		StackPolicyBody: aws.String(`{
   "Statement" : [
     {
+      "Effect" : "Allow",
+      "Action" : "Update:*",
+      "Principal" : "*",
+      "Resource" : "*"
+    },
+    {
       "Effect" : "Deny",
       "Action" : "Update:*",
       "Principal" : "*",

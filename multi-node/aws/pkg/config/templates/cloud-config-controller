@@ -137,27 +137,34 @@ coreos:
 {{ end }}
 
 write_files:
+  - path: /opt/bin/kubectl-common
+    permissions: 0600
+    content: |
+      # source this file to set up a kubectl alias
+      alias kubectl='sudo rkt run \
+      --net=host \
+      --volume bk,kind=host,source=/srv/kubernetes \
+      --mount volume=bk,target=/srv/kubernetes \
+      --insecure-options=image docker://{{.HyperkubeImageRepo}}:{{.K8sVer}} --exec /hyperkube -- kubectl \
+      '
   - path: /opt/bin/install-kube-system
     permissions: 0700
     owner: root:root
     content: |
       #!/bin/bash -e
-      /usr/bin/curl  -H "Content-Type: application/json" -XPOST \
-      -d @"/srv/kubernetes/manifests/kube-dns-rc.json" \
-      "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers"
+      source /opt/bin/kubectl-common
 
-      /usr/bin/curl  -H "Content-Type: application/json" -XPOST \
-      -d @"/srv/kubernetes/manifests/kube-dashboard-rc.json" \
-      "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers"
+      # delete any default service tokens
+      kubectl get -o=json secrets --all-namespaces | jq -r ".items[] | select(.metadata.annotations['kubernetes.io/service-account.name'] == 'default')" | kubectl delete -f -
 
-      /usr/bin/curl  -H "Content-Type: application/json" -XPOST \
-      -d @"/srv/kubernetes/manifests/heapster-de.json" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+      kubectl apply -f "/srv/kubernetes/manifests/kube-dns-rc.json"
+
+      kubectl apply -f "/srv/kubernetes/manifests/kube-dashboard-rc.json"
+
+      kubectl apply -f "/srv/kubernetes/manifests/heapster-de.json"
 
       for manifest in {kube-dns,heapster,kube-dashboard}-svc.json;do
-          /usr/bin/curl  -H "Content-Type: application/json" -XPOST \
-          -d @"/srv/kubernetes/manifests/$manifest" \
-          "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
+        kubectl apply -f "/srv/kubernetes/manifests/$manifest"
       done
 
 {{ if .UseCalico }}
@@ -166,9 +173,11 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
-      /usr/bin/curl -H "Content-Type: application/json" -XPOST -d @"/srv/kubernetes/manifests/calico-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
+      source /opt/bin/kubectl-common
 
+      kubectl apply -f "/srv/kubernetes/manifests/calico-system.json"
       /usr/bin/cp /srv/kubernetes/manifests/calico-policy-controller.yaml /etc/kubernetes/manifests
+
 {{ end }}
 
   - path: /opt/bin/decrypt-tls-assets
