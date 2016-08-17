@@ -141,12 +141,11 @@ write_files:
     permissions: 0600
     content: |
       # source this file to set up a kubectl alias
-      alias kubectl='sudo rkt run \
-      --net=host \
-      --volume bk,kind=host,source=/srv/kubernetes \
-      --mount volume=bk,target=/srv/kubernetes \
-      --insecure-options=image docker://{{.HyperkubeImageRepo}}:{{.K8sVer}} --exec /hyperkube -- kubectl \
-      '
+      kubectl='sudo rkt run
+        --net=host
+        --volume bk,kind=host,source=/srv/kubernetes
+        --mount volume=bk,target=/srv/kubernetes
+        --insecure-options=image docker://{{.HyperkubeImageRepo}}:{{.K8sVer}} --exec /hyperkube -- kubectl'
   - path: /opt/bin/install-kube-system
     permissions: 0700
     owner: root:root
@@ -155,7 +154,7 @@ write_files:
       source /opt/bin/kubectl-common
 
       # delete any default service tokens
-      kubectl get -o=json secrets --all-namespaces | jq -r ".items[] | select(.metadata.annotations['kubernetes.io/service-account.name'] == 'default')" | kubectl delete -f -
+      kubectl get -o=json secrets --all-namespaces | jq -r '.items[] | select(.metadata.annotations["kubernetes.io/service-account.name"] == "default")' | kubectl delete -f -
 
       kubectl apply -f "/srv/kubernetes/manifests/kube-dns-rc.json"
 
